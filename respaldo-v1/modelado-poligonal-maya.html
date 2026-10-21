@@ -1,0 +1,860 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Modelado Poligonal en Maya 2027</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,500;0,700;0,800;1,700;1,800;1,900&family=Mulish:wght@400;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: banda héroe estilo póster UISRAEL + módulos en columna con visores 3D tipo viewport de Maya */
+:root{
+  --bg:#F4F6FB; --surface:#FFFFFF; --surface-2:#EAEEF8;
+  --ink:#2E3A5C; --muted:#5B678C; --line:#D6DCEC;
+  --brand:#0076D6; --navy:#3F4B6E; --accent:#F2BE22; --accent-ink:#1B2350;
+  --accent-soft:rgba(242,190,34,.35); --good:#1F9D6B; --bad:#D9363E; --bad-soft:rgba(217,54,62,.22); --warn:#C98A00;
+  --hero-1:#0A1A6B; --hero-2:#1B3FC4; --hero-3:#3B2FA8;
+  --fig-line:#3F4B6E; --fig-face:#E3E8F4;
+  --f-display:"Montserrat",system-ui,sans-serif; --f-body:"Mulish",system-ui,sans-serif; --f-mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#071039; --surface:#0E1A55; --surface-2:#132468; --ink:#EEF2FF; --muted:#A8B5E4; --line:#25398A;
+  --brand:#56A8FF; --navy:#C9D3F5; --accent:#F7C948; --accent-ink:#141B45; --accent-soft:rgba(247,201,72,.3);
+  --good:#3CCB8F; --bad:#FF6B72; --bad-soft:rgba(255,107,114,.25); --warn:#F7C948;
+  --fig-line:#C9D3F5; --fig-face:#1A2C78; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#071039; --surface:#0E1A55; --surface-2:#132468; --ink:#EEF2FF; --muted:#A8B5E4; --line:#25398A;
+  --brand:#56A8FF; --navy:#C9D3F5; --accent:#F7C948; --accent-ink:#141B45; --accent-soft:rgba(247,201,72,.3);
+  --good:#3CCB8F; --bad:#FF6B72; --bad-soft:rgba(255,107,114,.25); --warn:#F7C948;
+  --fig-line:#C9D3F5; --fig-face:#1A2C78; color-scheme:dark}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important;animation:none!important}}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 var(--f-body)}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;line-height:1.15;margin:0}
+h2{font-size:clamp(1.6rem,3.2vw,2.3rem);font-weight:800;font-style:italic}
+h3{font-size:1.15rem;font-weight:700}
+p{margin:0}
+a{color:var(--brand)}
+kbd{font-family:var(--f-mono);font-size:.78em;font-weight:700;padding:.1em .45em;border-radius:5px;border:1px solid var(--line);border-bottom-width:2px;background:var(--surface-2);color:var(--ink);white-space:nowrap}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+/* Header */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;gap:20px;min-height:62px;flex-wrap:wrap;padding-block:8px}
+.mark{display:flex;flex-direction:column;line-height:1;text-decoration:none}
+.mark b{font-family:var(--f-display);font-weight:800;font-size:1.55rem;letter-spacing:-.01em;color:var(--navy)}
+.mark b span{color:var(--brand)}
+.mark small{font-family:var(--f-display);font-size:.55rem;font-weight:700;letter-spacing:.12em;color:var(--navy);margin-top:3px}
+.mark small i{font-weight:500;font-style:normal;letter-spacing:.02em;text-transform:lowercase}
+.top nav{display:flex;gap:4px;flex-wrap:wrap;margin-left:auto}
+.top nav a{font:700 .8rem var(--f-display);text-decoration:none;color:var(--muted);padding:7px 11px;border-radius:999px}
+.top nav a:hover{color:var(--ink);background:var(--surface-2)}
+
+/* Hero */
+.hero{position:relative;overflow:hidden;color:#fff;background:radial-gradient(1200px 500px at 85% 10%,rgba(120,90,255,.45),transparent 60%),linear-gradient(135deg,var(--hero-1),var(--hero-2) 60%,var(--hero-3))}
+.hero canvas{position:absolute;inset:0;width:100%;height:100%;opacity:.55}
+.hero .wrap{position:relative;padding-block:64px 56px;display:grid;gap:18px;justify-items:start}
+.eyebrow{font:800 italic .82rem var(--f-display);letter-spacing:.22em;text-transform:uppercase}
+.chip{display:inline-block;background:#F7C948;color:#141B45;padding:.15em .6em;margin-left:.4em;letter-spacing:.18em}
+.hero h1{font-size:clamp(2.3rem,6.4vw,4.6rem);font-weight:900;font-style:italic;color:#F7C948;letter-spacing:-.01em}
+.hero h1 em{display:block;font-style:italic;color:#fff;font-size:.55em;font-weight:800;margin-top:.15em}
+.hero .rule{width:min(560px,100%);height:4px;background:#F7C948;border-radius:2px}
+.hero p{max-width:62ch;color:#DDE5FF;font-size:1.05rem}
+.hero .meta{display:flex;flex-wrap:wrap;gap:10px 22px;font:700 italic .85rem var(--f-display);letter-spacing:.12em;text-transform:uppercase;color:#fff}
+.hero .meta span{display:flex;gap:8px;align-items:center}
+.hero .meta span::before{content:"";width:18px;height:2px;background:#F7C948}
+
+/* Sections */
+section.mod{padding-block:64px;border-bottom:1px solid var(--line)}
+.mod-head{display:grid;gap:10px;margin-bottom:28px;max-width:760px}
+.mod-num{font:800 italic .8rem var(--f-display);letter-spacing:.2em;text-transform:uppercase;color:var(--brand)}
+.mod-head p{color:var(--muted);font-size:1.05rem}
+.grid-2{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:24px;align-items:start}
+@media (max-width:900px){.grid-2{grid-template-columns:1fr}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px}
+
+/* Maya-like viewport */
+.vp{position:relative;border-radius:var(--r);overflow:hidden;background:linear-gradient(#6b7480,#2a2e35);height:460px;touch-action:none;border:1px solid #1d2026;user-select:none}
+@media (max-width:600px){.vp{height:340px}}
+.vp canvas{display:block;width:100%;height:100%;cursor:crosshair}
+.vp .hud{position:absolute;left:10px;top:10px;font:500 11.5px/1.5 var(--f-mono);color:#e9edf3;text-shadow:0 1px 2px #000;pointer-events:none;white-space:pre}
+.vp .hud b{color:#F7C948}
+.vp .tag{position:absolute;right:10px;top:10px;font:700 11px var(--f-mono);letter-spacing:.06em;color:#e9edf3;background:rgba(0,0,0,.35);padding:4px 8px;border-radius:6px;pointer-events:none}
+.vp .hint{position:absolute;left:10px;bottom:10px;right:10px;font:600 12px var(--f-body);color:#dfe5ee;text-shadow:0 1px 2px #000;pointer-events:none}
+.vp .noGL{position:absolute;inset:0;display:grid;place-items:center;color:#fff;padding:20px;text-align:center}
+
+.modes{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.btn{font:700 .82rem var(--f-display);border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:8px 12px;border-radius:9px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:background .15s,border-color .15s}
+.btn:hover{border-color:var(--brand)}
+.btn[aria-pressed="true"]{background:var(--brand);border-color:var(--brand);color:#fff}
+.btn[aria-pressed="true"] kbd{background:rgba(255,255,255,.18);color:#fff;border-color:rgba(255,255,255,.4)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary kbd{background:rgba(255,255,255,.4);color:var(--accent-ink);border-color:rgba(0,0,0,.15)}
+
+.comp-cards{display:grid;gap:12px}
+.comp{display:grid;grid-template-columns:42px minmax(0,1fr);gap:12px;padding:14px;border-radius:12px;border:1px solid var(--line);background:var(--surface);cursor:pointer;text-align:left;color:inherit;font:inherit}
+.comp[aria-pressed="true"]{border-color:var(--brand);box-shadow:0 0 0 2px color-mix(in srgb,var(--brand) 35%,transparent)}
+.comp svg{width:42px;height:42px}
+.comp h3{font-size:1rem;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.comp p{color:var(--muted);font-size:.92rem;margin-top:4px}
+.readout{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--surface-2);font:500 .85rem/1.5 var(--f-mono);min-height:3.2em;overflow-wrap:anywhere}
+
+/* Playground */
+.toolbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.toolbar .sep{width:1px;height:26px;background:var(--line);margin:0 4px}
+.side{display:grid;gap:16px}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.stat{padding:10px;border-radius:10px;background:var(--surface-2);text-align:center}
+.stat b{display:block;font:800 1.5rem var(--f-display);font-variant-numeric:tabular-nums}
+.stat small{font:700 .68rem var(--f-display);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.stat.q b{color:var(--good)} .stat.t b{color:var(--warn)} .stat.n b{color:var(--bad)}
+.helpline{font:600 .9rem/1.45 var(--f-body);padding:12px 14px;border-radius:10px;border-left:4px solid var(--brand);background:var(--surface-2)}
+.helpline.warn{border-left-color:var(--bad)}
+.helpline.ok{border-left-color:var(--good)}
+.field{display:grid;gap:4px;font:700 .78rem var(--f-display);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.field input[type=range]{width:100%;accent-color:var(--brand)}
+.field select{font:600 .9rem var(--f-body);padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:.85rem;color:var(--muted)}
+.legend span{display:flex;align-items:center;gap:6px}
+.legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+.steps{margin:0;padding-left:1.2em;display:grid;gap:6px;color:var(--muted);font-size:.93rem}
+.steps b{color:var(--ink)}
+
+/* Toolkit explorer */
+.tk{display:grid;grid-template-columns:280px minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:860px){.tk{grid-template-columns:1fr}}
+.tk-list{display:grid;gap:14px;max-height:640px;overflow:auto;padding-right:4px}
+@media (max-width:860px){.tk-list{max-height:none;grid-auto-flow:row}}
+.tk-cat h4{margin:0 0 6px;font:800 .7rem var(--f-display);letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+.tk-cat div{display:flex;flex-wrap:wrap;gap:5px}
+.tk-cat button{font:600 .85rem var(--f-body);border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:5px 10px;border-radius:999px;cursor:pointer}
+.tk-cat button[aria-pressed="true"]{background:var(--navy);color:var(--surface);border-color:var(--navy)}
+.tk-detail{display:grid;gap:16px}
+.tk-detail header{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:baseline}
+.tk-detail h3{font:800 italic 1.7rem var(--f-display)}
+.tk-detail .path{font:500 .8rem var(--f-mono);color:var(--muted)}
+.fig{display:grid;grid-template-columns:minmax(0,1fr) 40px minmax(0,1fr);align-items:center;gap:6px;background:var(--surface-2);border-radius:12px;padding:14px}
+.fig figure{margin:0;display:grid;gap:6px;justify-items:center}
+.fig figcaption{font:700 .68rem var(--f-display);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.fig svg{width:100%;max-width:240px;height:auto}
+.fig .arrow{font:800 1.4rem var(--f-display);color:var(--brand);text-align:center}
+.d-ln{stroke:var(--fig-line);stroke-width:1.4;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.d-face{fill:var(--fig-face)}
+.d-hl{stroke:var(--accent);stroke-width:3.2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.d-hf{fill:var(--accent-soft)}
+.d-bad{fill:var(--bad-soft);stroke:var(--bad);stroke-width:2}
+.d-pt{fill:var(--fig-line)}
+.d-hp{fill:var(--accent);stroke:var(--accent-ink);stroke-width:1}
+.d-bg{fill:var(--surface-2)}
+.d-txt{fill:var(--muted);font:700 8px var(--f-display);letter-spacing:.05em}
+.d-dash{stroke:var(--brand);stroke-width:1.5;stroke-dasharray:4 3;fill:none}
+.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.kv > div{padding:14px;border-radius:12px;border:1px solid var(--line)}
+.kv h5{margin:0 0 6px;font:800 .7rem var(--f-display);letter-spacing:.16em;text-transform:uppercase;color:var(--brand)}
+.kv ul{margin:0;padding-left:1.1em;display:grid;gap:4px;font-size:.93rem}
+.tip{padding:12px 14px;border-radius:10px;background:var(--accent-soft);font-size:.93rem}
+.tip b{font-family:var(--f-display)}
+
+/* Topology */
+.cmp{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+@media (max-width:860px){.cmp{grid-template-columns:1fr}}
+.cmp .vp{height:280px}
+.cmp h3{margin:10px 0 4px;display:flex;align-items:center;gap:8px}
+.cmp h3 i{width:12px;height:12px;border-radius:3px}
+.cmp p{color:var(--muted);font-size:.92rem}
+.ctrl-row{display:flex;flex-wrap:wrap;gap:16px 28px;align-items:end;margin-bottom:16px}
+.ctrl-row .field{min-width:220px}
+.reasons{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-top:36px}
+.reason{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:grid;gap:10px;align-content:start}
+.reason svg{width:100%;height:auto;background:var(--surface-2);border-radius:10px}
+.reason p{color:var(--muted);font-size:.93rem}
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin-top:28px}
+.rule-c{padding:14px 16px;border-radius:12px;background:var(--surface-2)}
+.rule-c b{display:block;font-family:var(--f-display);margin-bottom:4px}
+.rule-c p{font-size:.92rem;color:var(--muted)}
+.rule-c.ok b{color:var(--good)} .rule-c.no b{color:var(--bad)}
+
+/* Quiz */
+.quiz{display:grid;gap:14px;max-width:820px}
+.q{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px}
+.q p{font-weight:700;margin-bottom:10px}
+.q .opts{display:flex;flex-wrap:wrap;gap:8px}
+.q button{font:600 .9rem var(--f-body);padding:8px 12px;border-radius:9px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);cursor:pointer}
+.q button.right{background:var(--good);border-color:var(--good);color:#fff}
+.q button.wrong{background:var(--bad);border-color:var(--bad);color:#fff}
+.q .fb{margin-top:10px;font-size:.92rem;color:var(--muted)}
+.score{font:800 italic 1.1rem var(--f-display)}
+
+footer{padding-block:40px;color:var(--muted);font-size:.9rem}
+footer .wrap{display:flex;flex-wrap:wrap;gap:16px 32px;justify-content:space-between;align-items:center}
+</style>
+
+<header class="top">
+  <div class="wrap">
+    <a class="mark" href="#inicio" aria-label="UISRAEL">
+      <b><span>U</span>ISRAEL</b>
+      <small>EMPRENDE <i>trasciende</i> INNOVA</small>
+    </a>
+    <nav aria-label="Módulos">
+      <a href="#componentes">Componentes</a>
+      <a href="#taller">Taller</a>
+      <a href="#toolkit">Herramientas</a>
+      <a href="#topologia">Quads vs N-gons</a>
+      <a href="#quiz">Autoevaluación</a>
+    </nav>
+  </div>
+</header>
+
+<div class="hero" id="inicio">
+  <canvas id="heroBg" aria-hidden="true"></canvas>
+  <div class="wrap">
+    <div class="eyebrow">Actualización de conocimientos <span class="chip">Modelado 3D</span></div>
+    <h1>Modelado poligonal<em>en Autodesk Maya 2027</em></h1>
+    <div class="rule"></div>
+    <p>Aprende con visores 3D interactivos qué son los vértices, aristas y caras, cómo funcionan Extrude, Bevel e Insert Edge Loop, y por qué una malla limpia de quads se suaviza, deforma y texturiza mejor que una llena de N-gons.</p>
+    <div class="meta"><span>5 módulos</span><span>Práctica en el navegador</span><span>Atajos de Maya</span></div>
+  </div>
+</div>
+
+<main>
+<!-- ============ MÓDULO 1 ============ -->
+<section class="mod" id="componentes">
+  <div class="wrap">
+    <div class="mod-head">
+      <div class="mod-num">Módulo 1 · Anatomía de una malla</div>
+      <h2>Vértice, arista y cara</h2>
+      <p>Todo objeto poligonal en Maya está formado por tres componentes. Cambia de modo como en Maya (<kbd>F8</kbd> objeto, <kbd>F9</kbd> vértice, <kbd>F10</kbd> arista, <kbd>F11</kbd> cara) y haz clic en el cubo para seleccionar. Arrastra para orbitar.</p>
+    </div>
+    <div class="grid-2">
+      <div>
+        <div class="vp" id="vpAnat"><div class="tag" id="anatTag">OBJECT MODE</div><div class="hint">Clic: seleccionar · Shift + clic: añadir · Doble clic en una arista: seleccionar edge loop · Arrastrar: orbitar · Rueda: zoom</div></div>
+      </div>
+      <div class="comp-cards" id="compCards">
+        <button class="comp" data-mode="vertex" aria-pressed="false">
+          <svg viewBox="0 0 42 42"><path class="d-ln" d="M8 30L21 36L34 30L34 14L21 8L8 14Z M21 36V20 M8 14L21 20L34 14"/><circle class="d-hp" cx="21" cy="20" r="4"/></svg>
+          <div><h3>Vértice <kbd>F9</kbd></h3><p>Un punto en el espacio con coordenadas X, Y, Z. Es la unidad mínima: mover vértices cambia la forma.</p></div>
+        </button>
+        <button class="comp" data-mode="edge" aria-pressed="false">
+          <svg viewBox="0 0 42 42"><path class="d-ln" d="M8 30L21 36L34 30L34 14L21 8L8 14Z M8 14L21 20L34 14"/><path class="d-hl" d="M21 36V20"/></svg>
+          <div><h3>Arista (edge) <kbd>F10</kbd></h3><p>La línea recta que une dos vértices. Las aristas conectadas en fila forman <b>edge loops</b>, la base del flujo de la malla.</p></div>
+        </button>
+        <button class="comp" data-mode="face" aria-pressed="false">
+          <svg viewBox="0 0 42 42"><path class="d-hf" d="M8 14L21 20L21 36L8 30Z"/><path class="d-ln" d="M8 30L21 36L34 30L34 14L21 8L8 14Z M21 36V20 M8 14L21 20L34 14"/></svg>
+          <div><h3>Cara (face) <kbd>F11</kbd></h3><p>La superficie cerrada por tres o más aristas. Según sus lados es <b>triángulo</b> (3), <b>quad</b> (4) o <b>N-gon</b> (5+). Su <b>normal</b> indica hacia dónde mira.</p></div>
+        </button>
+        <button class="comp" data-mode="object" aria-pressed="true">
+          <svg viewBox="0 0 42 42"><path d="M8 30L21 36L34 30L34 14L21 8L8 14Z M21 36V20 M8 14L21 20L34 14" style="stroke:var(--good);stroke-width:2;fill:none"/></svg>
+          <div><h3>Objeto <kbd>F8</kbd></h3><p>La malla completa como un solo elemento: se mueve, rota y escala con su pivote. En Maya el contorno seleccionado se ve verde.</p></div>
+        </button>
+        <div class="readout" id="anatReadout">Selecciona un modo y haz clic sobre el cubo.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MÓDULO 2 ============ -->
+<section class="mod" id="taller">
+  <div class="wrap">
+    <div class="mod-head">
+      <div class="mod-num">Módulo 2 · Taller práctico</div>
+      <h2>Modela en el navegador</h2>
+      <p>Un mini-viewport con herramientas reales del flujo poligonal. Prueba a extruir caras, insertar edge loops y borrar aristas, y observa en el contador cómo cambia la topología. Activa <b>Suavizado</b> para ver el efecto de la tecla <kbd>3</kbd> de Maya.</p>
+    </div>
+    <div class="modes" id="pgModes">
+      <button class="btn" data-mode="object" aria-pressed="false">Objeto <kbd>F8</kbd></button>
+      <button class="btn" data-mode="vertex" aria-pressed="false">Vértice <kbd>F9</kbd></button>
+      <button class="btn" data-mode="edge" aria-pressed="false">Arista <kbd>F10</kbd></button>
+      <button class="btn" data-mode="face" aria-pressed="true">Cara <kbd>F11</kbd></button>
+    </div>
+    <div class="grid-2">
+      <div style="display:grid;gap:12px">
+        <div class="toolbar">
+          <button class="btn primary" id="tExtrude">Extrude <kbd>Ctrl+E</kbd></button>
+          <button class="btn" id="tLoop" aria-pressed="false">Insert Edge Loop</button>
+          <button class="btn" id="tDelEdge">Delete Edge <kbd>Ctrl+Supr</kbd></button>
+          <button class="btn" id="tPoke">Poke Face</button>
+          <button class="btn" id="tTri">Triangulate</button>
+          <button class="btn" id="tMerge">Merge to Center</button>
+        </div>
+        <div class="vp" id="vpPlay"><div class="tag" id="playTag">FACE MODE</div><div class="hud" id="playHud"></div><div class="hint" id="playHint">Selecciona la cara superior (clic) y pulsa Extrude.</div></div>
+        <div class="toolbar">
+          <button class="btn" id="tSmooth" aria-pressed="false">Suavizado <kbd>3</kbd></button>
+          <button class="btn" id="tTopo" aria-pressed="true">Colorear topología</button>
+          <span class="sep"></span>
+          <button class="btn" id="tUndo">Deshacer <kbd>Ctrl+Z</kbd></button>
+          <button class="btn" id="tReset">Reiniciar</button>
+        </div>
+      </div>
+      <div class="side">
+        <div class="panel" style="display:grid;gap:14px">
+          <label class="field">Malla inicial
+            <select id="pgPreset">
+              <option value="cube3">Cubo 3 × 3 × 3 (quads)</option>
+              <option value="cube1">Cubo simple (6 quads)</option>
+              <option value="cyl">Cilindro 12 lados (tapas N-gon)</option>
+              <option value="plane">Plano 4 × 4</option>
+            </select>
+          </label>
+          <label class="field">Extrude · Thickness <span id="thkVal" style="text-transform:none;font-family:var(--f-mono)">0.50</span>
+            <input type="range" id="pgThk" min="-1" max="1.5" step="0.05" value="0.5">
+          </label>
+          <div class="stats">
+            <div class="stat q"><b id="sQ">0</b><small>Quads</small></div>
+            <div class="stat t"><b id="sT">0</b><small>Triángulos</small></div>
+            <div class="stat n"><b id="sN">0</b><small>N-gons</small></div>
+          </div>
+          <div class="legend"><span><i style="background:#9aa0a8"></i>Quad</span><span><i style="background:#f2b630"></i>Triángulo</span><span><i style="background:#e5484d"></i>N-gon</span><span><i style="background:#ff8a1f"></i>Seleccionado</span></div>
+          <div class="helpline" id="pgMsg">Listo. Herramienta actual: selección.</div>
+        </div>
+        <div class="panel">
+          <h3 style="margin-bottom:10px">Ejercicios sugeridos</h3>
+          <ol class="steps">
+            <li><b>Extrude:</b> selecciona la cara central superior y extruye. Cuenta los quads nuevos: cada arista del borde genera una cara lateral.</li>
+            <li><b>Edge loop:</b> activa Insert Edge Loop y haz clic en una arista vertical. El loop da la vuelta completa porque todo son quads.</li>
+            <li><b>Rompe la topología:</b> en modo arista borra una arista interior (Delete Edge). Aparece un N-gon en rojo.</li>
+            <li><b>Comprueba:</b> intenta insertar un loop que cruce ese N-gon. Se detiene ahí, igual que en Maya.</li>
+            <li><b>Suaviza</b> con <kbd>3</kbd> y compara la zona del N-gon con el resto.</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MÓDULO 3 ============ -->
+<section class="mod" id="toolkit">
+  <div class="wrap">
+    <div class="mod-head">
+      <div class="mod-num">Módulo 3 · Modeling Toolkit</div>
+      <h2>Herramientas de modelado</h2>
+      <p>El <b>Modeling Toolkit</b> (pestaña junto al Attribute Editor, o <b>Modify &gt; Modeling Toolkit</b>) agrupa selección, simetría y las herramientas de malla. Muchas también están en los menús <b>Mesh</b>, <b>Edit Mesh</b> y <b>Mesh Tools</b>, y en el marking menu <kbd>Shift + clic derecho</kbd>. Elige una herramienta para ver qué hace.</p>
+    </div>
+    <div class="tk">
+      <div class="tk-list" id="tkList"></div>
+      <div class="panel tk-detail" id="tkDetail"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MÓDULO 4 ============ -->
+<section class="mod" id="topologia">
+  <div class="wrap">
+    <div class="mod-head">
+      <div class="mod-num">Módulo 4 · Topología</div>
+      <h2>Por qué mantener quads y evitar N-gons</h2>
+      <p>Los tres cubos parten de la misma forma. Solo cambia la cara superior: quads, triángulos o un único N-gon de 12 lados. Sube el nivel de suavizado (lo que hace <kbd>3</kbd> o <b>Mesh &gt; Smooth</b>) y compara las superficies.</p>
+    </div>
+    <div class="ctrl-row">
+      <label class="field">Nivel de suavizado (divisiones) <span id="cmpLvlV" style="font-family:var(--f-mono);text-transform:none">2</span>
+        <input type="range" id="cmpLvl" min="0" max="3" step="1" value="2">
+      </label>
+      <button class="btn" id="cmpWire" aria-pressed="true">Mostrar caja de control</button>
+    </div>
+    <div class="cmp">
+      <div><div class="vp" id="vpQ"><div class="tag">QUADS</div></div><h3><i style="background:var(--good)"></i>Solo quads</h3><p>Se redondea de forma uniforme y simétrica. Los edge loops recorren todo el objeto.</p></div>
+      <div><div class="vp" id="vpT"><div class="tag">TRIÁNGULOS</div></div><h3><i style="background:var(--warn)"></i>Con triángulos</h3><p>Las diagonales crean bultos asimétricos y pellizcos en el sombreado.</p></div>
+      <div><div class="vp" id="vpN"><div class="tag">N-GON</div></div><h3><i style="background:var(--bad)"></i>Con un N-gon</h3><p>Al subdividir aparece un polo de 12 aristas: la superficie se aplana en estrella y el brillo se distorsiona.</p></div>
+    </div>
+
+    <div class="reasons">
+      <div class="reason">
+        <svg viewBox="0 0 240 130" id="rLoop"></svg>
+        <h3>Los loops se detienen</h3>
+        <p>Selección de loops (doble clic), Insert Edge Loop y Offset Edge Loop avanzan cruzando quads. Al llegar a un triángulo o N-gon no saben por dónde seguir y se cortan, así que editar el modelo se vuelve lento.</p>
+      </div>
+      <div class="reason">
+        <svg viewBox="0 0 240 130" id="rTri"></svg>
+        <h3>Triangulación impredecible</h3>
+        <p>La GPU y los motores (Unreal, Unity) solo dibujan triángulos. Un quad tiene dos formas de dividirse; un N-gon tiene muchas. El motor puede elegir otra distinta a la de Maya y aparecen sombras o caras invertidas.</p>
+      </div>
+      <div class="reason">
+        <svg viewBox="0 0 240 130" id="rDef"></svg>
+        <h3>Deformación en animación</h3>
+        <p>Rodillas, codos y labios se doblan siguiendo los edge loops. Con loops limpios la malla se pliega con suavidad; un N-gon en la articulación se colapsa o pellizca al rigear.</p>
+      </div>
+      <div class="reason">
+        <svg viewBox="0 0 240 130" id="rPole"></svg>
+        <h3>Polos: no todo lo que no es valencia 4 es malo</h3>
+        <p>Un vértice con 3 o 5 aristas (polo) es necesario para cambiar la dirección del flujo y sigue siendo topología de quads. Colócalos en zonas planas, lejos de las curvas y articulaciones.</p>
+      </div>
+    </div>
+
+    <div class="rules">
+      <div class="rule-c ok"><b>Usa quads cuando…</b><p>el modelo se va a suavizar, animar, esculpir (ZBrush/Mudbox) o necesitas editar con loops.</p></div>
+      <div class="rule-c ok"><b>Un triángulo es aceptable si…</b><p>está en una superficie plana o rígida que no se deforma, o en la malla final de un videojuego, que igual se triangula al exportar.</p></div>
+      <div class="rule-c no"><b>Evita N-gons en…</b><p>superficies curvas, zonas que se suavizan y cualquier parte que se deforme. Si aparecen tras un Boolean o Fill Hole, reconéctalos con Multi-Cut.</p></div>
+      <div class="rule-c"><b>Cómo encontrarlos en Maya</b><p><b>Mesh &gt; Cleanup</b>, marca «Faces with more than 4 sides», o <b>Display &gt; Heads Up Display &gt; Poly Count</b> para vigilar el conteo.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MÓDULO 5 ============ -->
+<section class="mod" id="quiz">
+  <div class="wrap">
+    <div class="mod-head">
+      <div class="mod-num">Módulo 5 · Autoevaluación</div>
+      <h2>Comprueba lo aprendido</h2>
+      <p>Siete preguntas rápidas. Responde y recibe la explicación al instante.</p>
+    </div>
+    <div class="quiz" id="quizBox"></div>
+    <p class="score" id="quizScore" style="margin-top:18px"></p>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="mark"><b><span>U</span>ISRAEL</b><small>EMPRENDE <i>trasciende</i> INNOVA</small></div>
+    <div>Recursos: <a href="https://help.autodesk.com/" target="_blank" rel="noopener">Ayuda oficial de Autodesk Maya</a> · <a href="http://wiki.polycount.com/wiki/Topology" target="_blank" rel="noopener">Polycount Wiki: Topology</a></div>
+    <div>www.uisrael.edu.ec</div>
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+"use strict";
+/* ================= Vector helpers ================= */
+const add=(a,b)=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]], sub=(a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]];
+const scl=(a,s)=>[a[0]*s,a[1]*s,a[2]*s], dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
+const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
+const len=a=>Math.hypot(a[0],a[1],a[2]), norm=a=>{const l=len(a)||1;return scl(a,1/l)};
+const avg=P=>{let s=[0,0,0];P.forEach(p=>s=add(s,p));return scl(s,1/P.length)};
+const lerp=(a,b,t)=>add(a,scl(sub(b,a),t));
+function newell(P){const n=[0,0,0];for(let i=0;i<P.length;i++){const a=P[i],b=P[(i+1)%P.length];n[0]+=(a[1]-b[1])*(a[2]+b[2]);n[1]+=(a[2]-b[2])*(a[0]+b[0]);n[2]+=(a[0]-b[0])*(a[1]+b[1]);}return norm(n)}
+
+/* ================= Mesh engine ================= */
+const ekey=(a,b)=>a<b?a+'_'+b:b+'_'+a;
+const cloneMesh=m=>({v:m.v.map(p=>p.slice()),f:m.f.map(f=>f.slice())});
+function buildEdges(m){const map=new Map();m.f.forEach((f,fi)=>{for(let i=0;i<f.length;i++){const a=f[i],b=f[(i+1)%f.length],k=ekey(a,b);let e=map.get(k);if(!e){e={a:Math.min(a,b),b:Math.max(a,b),faces:[]};map.set(k,e)}e.faces.push(fi)}});return map}
+function compact(M){const used=new Map(),v=[];const f=M.f.map(face=>face.map(i=>{if(!used.has(i)){used.set(i,v.length);v.push(M.v[i])}return used.get(i)}));return{v,f}}
+function stats(m){let q=0,t=0,n=0,tris=0;m.f.forEach(f=>{if(f.length===3)t++;else if(f.length===4)q++;else n++;tris+=f.length-2});return{q,t,n,tris,v:m.v.length,e:buildEdges(m).size,f:m.f.length}}
+
+function boxGrid(C){const v=[],f=[],idx=new Map();
+  const vid=p=>{const k=p.map(x=>x.toFixed(4)).join(',');let i=idx.get(k);if(i===undefined){i=v.length;idx.set(k,i);v.push(p.slice())}return i};
+  for(let n=0;n<3;n++)for(const s of[1,-1]){let u=(n+1)%3,w=(n+2)%3;if(s<0)[u,w]=[w,u];
+    const fixed=s>0?C[n][C[n].length-1]:C[n][0],U=C[u],W=C[w];
+    for(let i=0;i<U.length-1;i++)for(let j=0;j<W.length-1;j++){
+      const c=(a,b)=>{const p=[0,0,0];p[n]=fixed;p[u]=U[a];p[w]=W[b];return vid(p)};
+      f.push([c(i,j),c(i+1,j),c(i+1,j+1),c(i,j+1)])}}
+  return{v,f}}
+function planeGrid(N,S){const v=[],f=[];for(let i=0;i<=N;i++)for(let j=0;j<=N;j++)v.push([-S+2*S*j/N,0,-S+2*S*i/N]);
+  const id=(i,j)=>i*(N+1)+j;for(let i=0;i<N;i++)for(let j=0;j<N;j++)f.push([id(i,j),id(i+1,j),id(i+1,j+1),id(i,j+1)]);return{v,f}}
+function cylinder(n,r,h){const v=[],f=[];for(const y of[-h,h])for(let i=0;i<n;i++){const a=2*Math.PI*i/n;v.push([r*Math.cos(a),y,r*Math.sin(a)])}
+  for(let i=0;i<n;i++){const j=(i+1)%n;f.push([i,n+i,n+j,j])}
+  f.push([...Array(n).keys()]);f.push([...Array(n).keys()].map(i=>n+(n-1-i)));return{v,f}}
+const G3=[-1,-1/3,1/3,1];
+const PRESETS={cube3:()=>boxGrid([G3,G3,G3]),cube1:()=>boxGrid([[-1,1],[-1,1],[-1,1]]),cyl:()=>cylinder(12,1,1),plane:()=>planeGrid(4,1.4)};
+
+/* Catmull-Clark (con bordes). Devuelve también la cara original de cada cara nueva */
+function subdivide(m){const V=m.v,F=m.f,E=buildEdges(m),nv=V.length;
+  const fp=F.map(f=>avg(f.map(i=>V[i])));
+  const eIdx=new Map(),eps=[],eStart=nv+F.length;
+  for(const[k,e]of E){const p=e.faces.length===2?avg([V[e.a],V[e.b],fp[e.faces[0]],fp[e.faces[1]]]):avg([V[e.a],V[e.b]]);eIdx.set(k,eStart+eps.length);eps.push(p)}
+  const vF=Array.from({length:nv},()=>[]),vE=Array.from({length:nv},()=>[]);
+  F.forEach((f,fi)=>f.forEach(i=>vF[i].push(fi)));for(const e of E.values()){vE[e.a].push(e);vE[e.b].push(e)}
+  const nV=new Array(nv);
+  for(let i=0;i<nv;i++){const P=V[i],ed=vE[i];if(!ed.length){nV[i]=P.slice();continue}
+    const bnd=ed.filter(e=>e.faces.length!==2);
+    if(bnd.length){if(bnd.length===2){const o=bnd.map(e=>e.a===i?e.b:e.a);nV[i]=add(scl(P,.75),scl(add(V[o[0]],V[o[1]]),.125))}else nV[i]=P.slice();continue}
+    const n=vF[i].length,Fa=avg(vF[i].map(fi=>fp[fi])),R=avg(ed.map(e=>scl(add(V[e.a],V[e.b]),.5)));
+    nV[i]=scl(add(add(Fa,scl(R,2)),scl(P,n-3)),1/n)}
+  const f=[],src=[];
+  F.forEach((face,fi)=>{const k=face.length;for(let j=0;j<k;j++){const a=face[j],nx=face[(j+1)%k],pv=face[(j-1+k)%k];f.push([a,eIdx.get(ekey(a,nx)),nv+fi,eIdx.get(ekey(pv,a))]);src.push(fi)}});
+  return{v:nV.concat(fp,eps),f,src}}
+
+/* Triangulación de un polígono (abanico para quads, earcut para N-gons) */
+function triPoly(P){const k=P.length;if(k===3)return[[0,1,2]];if(k===4)return[[0,1,2],[0,2,3]];
+  const n=newell(P);let u=Math.abs(n[0])<.9?norm(cross(n,[1,0,0])):norm(cross(n,[0,1,0]));const w=cross(n,u);
+  const c2=P.map(p=>new THREE.Vector2(dot(p,u),dot(p,w)));let tris;
+  try{tris=THREE.ShapeUtils.triangulateShape(c2,[])}catch(e){tris=null}
+  if(!tris||tris.length!==k-2){tris=[];for(let j=1;j<k-1;j++)tris.push([0,j,j+1])}
+  return tris.map(t=>{const[a,b,c]=t;return dot(cross(sub(P[b],P[a]),sub(P[c],P[a])),n)<0?[a,c,b]:[a,b,c]})}
+
+function extrudeFaces(m,ids,d){const M=cloneMesh(m),S=new Set(ids),E=buildEdges(M),vn=new Map();
+  for(const fi of S){const n=newell(M.f[fi].map(i=>M.v[i]));for(const i of M.f[fi])vn.set(i,add(vn.get(i)||[0,0,0],n))}
+  const map=new Map();for(const[i,n]of vn){map.set(i,M.v.length);M.v.push(add(M.v[i],scl(norm(n),d)))}
+  const sides=[];
+  for(const fi of S){const f=M.f[fi];for(let j=0;j<f.length;j++){const a=f[j],b=f[(j+1)%f.length],e=E.get(ekey(a,b));const others=e.faces.filter(x=>x!==fi);
+    if(!others.some(x=>S.has(x)))sides.push([a,b,map.get(b),map.get(a)])}}
+  for(const fi of S)M.f[fi]=M.f[fi].map(i=>map.get(i));
+  M.f.push(...sides);return{mesh:M,faces:[...S],sides:sides.length}}
+
+function insertEdgeLoop(m,a,b,t){const E=buildEdges(m),se=E.get(ekey(a,b));if(!se)return null;
+  const ring=[],visited=new Set(),dir=new Map([[ekey(a,b),[a,b]]]);let blocked=0;
+  function walk(f0){let ca=a,cb=b,fi=f0;
+    while(fi!==undefined&&!visited.has(fi)){const f=m.f[fi];if(f.length!==4){blocked++;break}visited.add(fi);
+      const ia=f.indexOf(ca),ib=f.indexOf(cb);
+      const na=[f[(ia+1)%4],f[(ia+3)%4]].find(x=>x!==cb),nb=[f[(ib+1)%4],f[(ib+3)%4]].find(x=>x!==ca);
+      const k=ekey(na,nb);ring.push({fi,k0:ekey(ca,cb),k1:k});if(!dir.has(k))dir.set(k,[na,nb]);
+      fi=E.get(k).faces.find(x=>x!==fi);ca=na;cb=nb}}
+  walk(se.faces[0]);if(se.faces[1]!==undefined)walk(se.faces[1]);
+  const M=cloneMesh(m),mid=new Map();
+  for(const[k,[x,y]]of dir){mid.set(k,M.v.length);M.v.push(lerp(m.v[x],m.v[y],t))}
+  const ringMap=new Map(ring.map(r=>[r.fi,r]));const nf=[];let ngonMade=0;const newEdges=[];
+  M.f.forEach((f,fi)=>{const P=[];let touched=false;
+    for(let j=0;j<f.length;j++){P.push(f[j]);const k=ekey(f[j],f[(j+1)%f.length]);if(mid.has(k)){P.push(mid.get(k));touched=true}}
+    if(!touched){nf.push(f);return}
+    const r=ringMap.get(fi);
+    if(r){const m1=mid.get(r.k0),m2=mid.get(r.k1),i1=P.indexOf(m1),i2=P.indexOf(m2);
+      const part=(s,e)=>{const o=[];for(let i=s;;i=(i+1)%P.length){o.push(P[i]);if(i===e)break}return o};
+      nf.push(part(i1,i2),part(i2,i1));newEdges.push([m1,m2])}
+    else{nf.push(P);if(P.length>4)ngonMade++}});
+  M.f=nf;return{mesh:M,newEdges,blocked,ngonMade,ringLen:ring.length}}
+
+function dissolveValence2(M){const E=buildEdges(M),cnt=new Map(),interior=new Map();
+  for(const e of E.values())for(const v of[e.a,e.b]){cnt.set(v,(cnt.get(v)||0)+1);if(e.faces.length!==2)interior.set(v,false)}
+  const kill=new Set();for(const[v,c]of cnt)if(c===2&&interior.get(v)!==false)kill.add(v);
+  M.f=M.f.map(f=>f.length>3?f.filter(i=>!kill.has(i)):f).filter(f=>f.length>=3);return M}
+function deleteEdges(m,keys){const M=cloneMesh(m);let merged=0;
+  for(const k of keys){const[a,b]=k.split('_').map(Number),E=buildEdges(M),e=E.get(ekey(a,b));if(!e||e.faces.length!==2)continue;
+    const[fA,fB]=e.faces;if(fA===fB)continue;const A=M.f[fA],B=M.f[fB];
+    const iA=A.indexOf(a);let x,y;if(A[(iA+1)%A.length]===b){x=a;y=b}else{x=b;y=a}
+    const rot=(arr,s)=>{const i=arr.indexOf(s);return arr.slice(i).concat(arr.slice(0,i))};
+    const out=rot(A,y).concat(rot(B,x).slice(1,-1));if(new Set(out).size!==out.length)continue;
+    M.f[fA]=out;M.f.splice(fB,1);merged++;dissolveValence2(M)}
+  return{mesh:compact(dissolveValence2(M)),merged}}
+function pokeFaces(m,ids){const M=cloneMesh(m),S=new Set(ids),nf=[];
+  M.f.forEach((f,fi)=>{if(!S.has(fi)){nf.push(f);return}const c=M.v.length;M.v.push(avg(f.map(i=>M.v[i])));for(let j=0;j<f.length;j++)nf.push([f[j],f[(j+1)%f.length],c])});M.f=nf;return M}
+function triangulateFaces(m,ids){const M=cloneMesh(m),S=new Set(ids),nf=[];
+  M.f.forEach((f,fi)=>{if(!S.has(fi)||f.length===3){nf.push(f);return}triPoly(f.map(i=>M.v[i])).forEach(t=>nf.push(t.map(j=>f[j])))});M.f=nf;return M}
+function mergeVerts(m,ids){const M=cloneMesh(m),S=new Set(ids),t=ids[0];M.v[t]=avg(ids.map(i=>M.v[i]));
+  M.f=M.f.map(f=>{const g=f.map(i=>S.has(i)?t:i);return g.filter((x,k)=>x!==g[(k+1)%g.length])}).filter(g=>g.length>=3&&new Set(g).size===g.length);return compact(M)}
+function edgeLoop(m,a,b){const E=buildEdges(m),vE=new Map();
+  for(const[k,e]of E){for(const v of[e.a,e.b]){if(!vE.has(v))vE.set(v,[]);vE.get(v).push(k)}}
+  const out=new Set([ekey(a,b)]);
+  function go(u,v){for(let guard=0;guard<500;guard++){const inc=vE.get(v)||[];if(inc.length!==4)return;
+      const fs=new Set(E.get(ekey(u,v)).faces);const next=inc.find(k=>k!==ekey(u,v)&&!E.get(k).faces.some(f=>fs.has(f)));if(!next||out.has(next))return;
+      out.add(next);const e=E.get(next);const w=e.a===v?e.b:e.a;u=v;v=w}}
+  go(a,b);go(b,a);return out}
+
+/* ================= Viewer ================= */
+const C={base:[.60,.63,.67],tri:[.95,.71,.19],ngon:[.90,.28,.30],sel:[1,.54,.12],hov:[1,.35,.35],vert:0xc23bd6,vsel:0xffd21f,vhov:0xff3b3b,wire:0x16191e,obj:0x5cff9a,esel:0xffb000};
+const HAS_GL=(()=>{try{const c=document.createElement('canvas');return!!(window.THREE&&(c.getContext('webgl')||c.getContext('experimental-webgl')))}catch(e){return false}})();
+
+class Viewer{
+  constructor(el,o={}){this.el=el;this.o=o;this.mode=o.mode||'object';this.sel={vertex:new Set(),edge:new Set(),face:new Set(),object:false};
+    this.hover=null;this.smooth=0;this.topo=!!o.topo;this.showCage=true;this.preview=null;
+    if(!HAS_GL){el.insertAdjacentHTML('beforeend','<div class="noGL">Este visor necesita WebGL y conexión para cargar three.js.</div>');this.dead=true;return}
+    const r=this.renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});r.setPixelRatio(Math.min(devicePixelRatio,2));el.prepend(r.domElement);
+    this.scene=new THREE.Scene();this.camera=new THREE.PerspectiveCamera(38,1,.01,100);this.camera.position.set(3.4,2.7,4.4);
+    this.scene.add(this.camera);this.scene.add(new THREE.HemisphereLight(0xffffff,0x3a3f4a,.75));
+    const dl=new THREE.DirectionalLight(0xffffff,.75);dl.position.set(1,1.5,2);this.camera.add(dl);
+    const grid=new THREE.GridHelper(12,12,0x2b2f36,0x4a505a);grid.position.y=-1.6;this.scene.add(grid);
+    this.base=new THREE.Group();this.over=new THREE.Group();this.scene.add(this.base,this.over);
+    this.controls=new THREE.OrbitControls(this.camera,r.domElement);this.controls.enablePan=true;this.controls.addEventListener('change',()=>this.render());
+    this.ray=new THREE.Raycaster();
+    new ResizeObserver(()=>this.resize()).observe(el);
+    if(o.interactive!==false)this.bind()}
+  resize(){if(this.dead)return;const w=this.el.clientWidth,h=this.el.clientHeight;if(!w||!h)return;this.renderer.setSize(w,h,false);this.camera.aspect=w/h;this.camera.updateProjectionMatrix();this.render()}
+  render(){if(!this.dead)this.renderer.render(this.scene,this.camera)}
+  setMesh(m,fit){this.mesh=m;this.clearSel();this.rebuild();if(fit)this.fit()}
+  fit(){const P=this.mesh.v;let c=avg(P),r=0;P.forEach(p=>r=Math.max(r,len(sub(p,c))));this.controls.target.set(...c);
+    const d=r/Math.sin(this.camera.fov*Math.PI/360)*1.55;const dir=new THREE.Vector3(.55,.42,.72).normalize();this.camera.position.set(c[0]+dir.x*d,c[1]+dir.y*d,c[2]+dir.z*d);this.controls.update();this.render()}
+  clearSel(){this.sel.vertex.clear();this.sel.edge.clear();this.sel.face.clear()}
+  faceColor(fi){const f=this.mesh.f[fi];if(this.mode==='face'){if(this.sel.face.has(fi))return C.sel;if(this.hover&&this.hover.id===fi)return C.hov}
+    if(this.topo){if(f.length===3)return C.tri;if(f.length>4)return C.ngon}return C.base}
+  disposeGroup(g){g.children.slice().forEach(c=>{g.remove(c);c.geometry&&c.geometry.dispose();c.material&&c.material.dispose()})}
+  rebuild(){if(this.dead)return;this.disposeGroup(this.base);const m=this.mesh;this.edges=buildEdges(m);
+    // jaula (caras planas, coloreables)
+    const pos=[],tf=[];m.f.forEach((f,fi)=>{const P=f.map(i=>m.v[i]);triPoly(P).forEach(t=>{t.forEach(j=>pos.push(...P[j]));tf.push(fi)})});
+    this.triFace=tf;const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
+    g.setAttribute('color',new THREE.Float32BufferAttribute(new Float32Array(pos.length),3));g.computeVertexNormals();
+    const mat=new THREE.MeshStandardMaterial({vertexColors:true,flatShading:true,roughness:.8,metalness:0,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:1,polygonOffsetUnits:1});
+    this.cage=new THREE.Mesh(g,mat);this.base.add(this.cage);
+    // suavizado
+    if(this.smooth>0){let s=m,src=m.f.map((_,i)=>i);for(let l=0;l<this.smooth;l++){const r=subdivide(s);src=r.src.map(p=>src[p]);s=r}
+      const sg=new THREE.BufferGeometry();sg.setAttribute('position',new THREE.Float32BufferAttribute(s.v.flat(),3));
+      const idx=[],tfs=[];s.f.forEach((f,fi)=>{idx.push(f[0],f[1],f[2],f[0],f[2],f[3]);tfs.push(fi,fi)});sg.setIndex(idx);sg.computeVertexNormals();
+      const ng=sg.toNonIndexed();sg.dispose();const col=new Float32Array(ng.attributes.position.count*3);
+      tfs.forEach((fi,t)=>{const of=src[fi],ff=m.f[of];let c=C.base;if(this.topo){if(ff.length===3)c=C.tri;else if(ff.length>4)c=C.ngon}
+        if(this.mode==='face'&&this.sel.face.has(of))c=C.sel;for(let k=0;k<3;k++)col.set(c,(t*3+k)*3)});
+      ng.setAttribute('color',new THREE.BufferAttribute(col,3));
+      this.smoothMesh=new THREE.Mesh(ng,new THREE.MeshStandardMaterial({vertexColors:true,roughness:.45,metalness:.05,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:1,polygonOffsetUnits:1}));
+      this.base.add(this.smoothMesh);mat.visible=false}else this.smoothMesh=null;
+    // aristas
+    const lp=[];for(const e of this.edges.values())lp.push(...m.v[e.a],...m.v[e.b]);
+    const lg=new THREE.BufferGeometry();lg.setAttribute('position',new THREE.Float32BufferAttribute(lp,3));
+    this.wire=new THREE.LineSegments(lg,new THREE.LineBasicMaterial({color:C.wire,transparent:true,opacity:1}));this.base.add(this.wire);
+    this.refresh()}
+  refresh(){if(this.dead)return;const m=this.mesh;
+    const col=this.cage.geometry.attributes.color;this.triFace.forEach((fi,t)=>{const c=this.faceColor(fi);for(let k=0;k<3;k++)col.setXYZ(t*3+k,...c)});col.needsUpdate=true;
+    const objSel=this.mode==='object'&&this.sel.object;
+    this.wire.material.color.setHex(objSel?C.obj:C.wire);this.wire.material.opacity=this.smooth>0?(this.showCage?.45:0):1;this.wire.visible=!(this.smooth>0&&!this.showCage);
+    this.disposeGroup(this.over);
+    const sz=this.size||(this.size=(()=>{let r=0;const c=avg(m.v);m.v.forEach(p=>r=Math.max(r,len(sub(p,c))));return r})());
+    if(this.mode==='vertex'){const pp=[],cc=[];const cv=new THREE.Color();m.v.forEach((p,i)=>{pp.push(...p);cv.setHex(this.sel.vertex.has(i)?C.vsel:(this.hover&&this.hover.id===i?C.vhov:C.vert));cc.push(cv.r,cv.g,cv.b)});
+      const pg=new THREE.BufferGeometry();pg.setAttribute('position',new THREE.Float32BufferAttribute(pp,3));pg.setAttribute('color',new THREE.Float32BufferAttribute(cc,3));
+      this.over.add(new THREE.Points(pg,new THREE.PointsMaterial({size:7,sizeAttenuation:false,vertexColors:true})))}
+    const tube=(p,q,hex,r)=>{const a=new THREE.Vector3(...p),b=new THREE.Vector3(...q),d=b.clone().sub(a),L=d.length();if(L<1e-6)return;
+      const mesh=new THREE.Mesh(new THREE.CylinderGeometry(r,r,L,6,1),new THREE.MeshBasicMaterial({color:hex}));mesh.position.copy(a).addScaledVector(d,.5);
+      mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize());this.over.add(mesh)};
+    const R=.011*Math.max(1,sz/1.7);
+    if(this.mode==='edge'){for(const k of this.sel.edge){const e=this.edges.get(k);if(e)tube(m.v[e.a],m.v[e.b],C.esel,R)}
+      if(this.hover&&this.hover.type==='edge'&&!this.sel.edge.has(this.hover.id)){const e=this.edges.get(this.hover.id);if(e)tube(m.v[e.a],m.v[e.b],C.vhov,R)}}
+    if(this.mode==='face'&&this.smooth>0){for(const fi of this.sel.face){const f=m.f[fi];if(!f)continue;for(let j=0;j<f.length;j++)tube(m.v[f[j]],m.v[f[(j+1)%f.length]],C.esel,R*.8)}}
+    if(this.preview)this.preview.forEach(([p,q])=>tube(p,q,C.vhov,R));
+    this.render()}
+  pick(ev){if(!this.cage)return null;const rc=this.renderer.domElement.getBoundingClientRect();
+    const v=new THREE.Vector2(((ev.clientX-rc.left)/rc.width)*2-1,-((ev.clientY-rc.top)/rc.height)*2+1);this.ray.setFromCamera(v,this.camera);
+    const hit=this.ray.intersectObject(this.cage)[0];if(!hit)return null;const fi=this.triFace[hit.faceIndex],f=this.mesh.f[fi],p=hit.point.toArray(),m=this.mesh;
+    if(this.mode==='object')return{type:'object'};if(this.mode==='face')return{type:'face',id:fi};
+    if(this.mode==='vertex'){let best=f[0],bd=1e9;f.forEach(i=>{const d=len(sub(m.v[i],p));if(d<bd){bd=d;best=i}});return{type:'vertex',id:best}}
+    let best=null,bd=1e9,bt=.5;for(let j=0;j<f.length;j++){const a=f[j],b=f[(j+1)%f.length],A=m.v[a],B=m.v[b],AB=sub(B,A);
+      let t=dot(sub(p,A),AB)/dot(AB,AB);t=Math.max(0,Math.min(1,t));const d=len(sub(p,lerp(A,B,t)));if(d<bd){bd=d;best=[a,b];bt=t}}
+    return{type:'edge',id:ekey(best[0],best[1]),a:best[0],b:best[1],t:bt}}
+  bind(){const c=this.renderer.domElement;let down=null,raf=0,lastEv=null;
+    c.addEventListener('pointerdown',e=>{down=[e.clientX,e.clientY]});
+    c.addEventListener('pointermove',e=>{lastEv=e;if(raf)return;raf=requestAnimationFrame(()=>{raf=0;if(down&&lastEv.buttons)return;const h=this.pick(lastEv);
+      const same=(h&&this.hover&&h.id===this.hover.id&&h.type===this.hover.type)||(!h&&!this.hover);this.hover=h&&h.type!=='object'?h:null;
+      if(this.o.onHover)this.o.onHover(this.hover);if(!same||this.o.onHover)this.refresh()})});
+    c.addEventListener('pointerleave',()=>{this.hover=null;if(this.o.onHover)this.o.onHover(null);this.refresh()});
+    c.addEventListener('pointerup',e=>{if(!down)return;const moved=Math.hypot(e.clientX-down[0],e.clientY-down[1]);down=null;if(moved>5)return;this.click(this.pick(e),e.shiftKey||e.ctrlKey)});
+    c.addEventListener('dblclick',e=>{const h=this.pick(e);if(h&&h.type==='edge'&&!this.o.tool?.()){edgeLoop(this.mesh,h.a,h.b).forEach(k=>this.sel.edge.add(k));this.refresh();this.o.onSelect&&this.o.onSelect(h,true)}})}
+  click(h,add){if(this.o.onTool&&this.o.onTool(h))return;
+    if(!h){if(!add){this.clearSel();this.sel.object=false}}
+    else if(h.type==='object')this.sel.object=true;
+    else{const s=this.sel[h.type];if(add){s.has(h.id)?s.delete(h.id):s.add(h.id)}else{s.clear();s.add(h.id)}}
+    if(this.smooth>0&&this.mode==='face')this.rebuild();else this.refresh();this.o.onSelect&&this.o.onSelect(h,false)}
+  setMode(m){this.mode=m;this.hover=null;this.preview=null;if(this.smooth>0)this.rebuild();else this.refresh()}
+}
+
+/* ================= Módulo 1: anatomía ================= */
+const MODE_TAG={object:'OBJECT MODE',vertex:'VERTEX · F9',edge:'EDGE · F10',face:'FACE · F11'};
+const anatOut=document.getElementById('anatReadout');
+const fmt=p=>p.map(x=>(x>=0?' ':'')+x.toFixed(2)).join(', ');
+const anat=new Viewer(document.getElementById('vpAnat'),{onSelect:(h,loop)=>{const m=anat.mesh;
+  if(!h){anatOut.textContent='Selección vacía.';return}
+  if(h.type==='object'){anatOut.innerHTML=`Objeto <b>pCube1</b> · ${m.v.length} vértices · ${buildEdges(m).size} aristas · ${m.f.length} caras`;return}
+  if(h.type==='vertex'){anatOut.innerHTML=`pCube1.vtx[${h.id}] · posición (${fmt(m.v[h.id])})<br>Seleccionados: ${anat.sel.vertex.size}`;return}
+  if(h.type==='edge'){const e=anat.edges.get(h.id);anatOut.innerHTML=loop?`Edge loop seleccionado: ${anat.sel.edge.size} aristas. El loop recorre el cubo de quad en quad.`:`Arista entre vtx[${e.a}] y vtx[${e.b}] · compartida por ${e.faces.length} caras · largo ${len(sub(m.v[e.a],m.v[e.b])).toFixed(2)}`;return}
+  const f=m.f[h.id];const n=newell(f.map(i=>m.v[i]));anatOut.innerHTML=`pCube1.f[${h.id}] · ${f.length} lados (${f.length===4?'quad':f.length===3?'triángulo':'N-gon'})<br>Normal (${fmt(n)}) · Seleccionadas: ${anat.sel.face.size}`}});
+if(!anat.dead){anat.setMesh(PRESETS.cube3(),true)}
+const compBtns=[...document.querySelectorAll('#compCards .comp')];
+function setAnatMode(md){compBtns.forEach(b=>b.setAttribute('aria-pressed',b.dataset.mode===md));document.getElementById('anatTag').textContent=MODE_TAG[md];
+  if(!anat.dead){anat.setMode(md)}
+  anatOut.textContent={object:'Modo objeto: haz clic en el cubo para seleccionarlo completo.',vertex:'Modo vértice: los puntos morados son vértices. Haz clic para seleccionar uno.',edge:'Modo arista: haz clic en una arista. Doble clic selecciona su edge loop completo.',face:'Modo cara: haz clic para seleccionar una cara. Este cubo tiene 54 quads.'}[md]}
+compBtns.forEach(b=>b.addEventListener('click',()=>setAnatMode(b.dataset.mode)));
+
+/* ================= Módulo 2: taller ================= */
+const $=id=>document.getElementById(id);
+let tool=null,undo=[],lastExtrude=null;
+const play=new Viewer($('vpPlay'),{mode:'face',topo:true,tool:()=>tool,
+  onSelect:()=>{lastExtrude=null;updateUI()},
+  onHover:h=>{if(tool!=='loop'){play.preview=null;return}
+    if(h&&h.type==='edge'){const r=insertEdgeLoop(play.mesh,h.a,h.b,h.t);play.preview=r?r.newEdges.map(([x,y])=>[r.mesh.v[x],r.mesh.v[y]]):null}else play.preview=null},
+  onTool:h=>{if(tool!=='loop')return false;if(!h||h.type!=='edge')return true;
+    const r=insertEdgeLoop(play.mesh,h.a,h.b,h.t);if(!r)return true;push();play.preview=null;play.setMesh(r.mesh);lastExtrude=null;
+    if(r.ngonMade)msg(`El loop se detuvo al encontrar un triángulo o N-gon y dejó ${r.ngonMade} N-gon(s) en rojo. Así se comporta Maya: los loops solo cruzan quads.`,'warn');
+    else if(r.blocked)msg(`Loop insertado en ${r.ringLen} quads. Se detuvo en un triángulo/N-gon: revisa esa zona.`,'warn');
+    else msg(`Edge loop insertado: ${r.ringLen} quads divididos, todo sigue siendo quads.`,'ok');updateUI();return true}});
+function push(){undo.push(cloneMesh(play.mesh));if(undo.length>40)undo.shift()}
+function msg(t,k){const el=$('pgMsg');el.textContent=t;el.className='helpline'+(k?' '+k:'')}
+function setPlayMode(md){document.querySelectorAll('#pgModes .btn').forEach(b=>b.setAttribute('aria-pressed',b.dataset.mode===md));$('playTag').textContent=MODE_TAG[md];if(!play.dead)play.setMode(md);if(md!=='edge'&&tool==='loop')setTool(null);updateUI()}
+function setTool(t){tool=t;$('tLoop').setAttribute('aria-pressed',t==='loop');if(!play.dead){play.preview=null;play.refresh()}
+  if(t==='loop'){if(play.mode!=='edge')setPlayMode('edge');msg('Insert Edge Loop activo: pasa el cursor sobre una arista para ver la vista previa y haz clic para insertar. Pulsa el botón otra vez para salir.')}}
+function updateUI(){if(play.dead)return;const s=stats(play.mesh);$('sQ').textContent=s.q;$('sT').textContent=s.t;$('sN').textContent=s.n;
+  $('playHud').innerHTML=`Verts:   <b>${s.v}</b>\nEdges:   <b>${s.e}</b>\nFaces:   <b>${s.f}</b>\nTris:    <b>${s.tris}</b>`;
+  const sf=play.sel.face.size,se=play.sel.edge.size,sv=play.sel.vertex.size,md=play.mode;
+  $('tExtrude').disabled=!(md==='face'&&sf);$('tPoke').disabled=!(md==='face'&&sf);$('tTri').disabled=!(md==='face'&&sf);
+  $('tDelEdge').disabled=!(md==='edge'&&se);$('tMerge').disabled=!(md==='vertex'&&sv>1);$('tUndo').disabled=!undo.length;
+  $('playHint').textContent=tool==='loop'?'Clic en una arista: insertar edge loop (la línea roja es la vista previa)':md==='face'?'Clic: seleccionar cara · Shift + clic: añadir · Arrastrar: orbitar':md==='edge'?'Clic: arista · Doble clic: edge loop · Shift + clic: añadir':md==='vertex'?'Clic: vértice · Shift + clic: añadir (Merge necesita 2 o más)':'Clic: seleccionar objeto'}
+function loadPreset(){const p=$('pgPreset').value;undo=[];lastExtrude=null;if(!play.dead){play.size=0;play.setMesh(PRESETS[p](),true)}
+  msg(p==='cyl'?'Este cilindro tiene tapas N-gon de 12 lados (en rojo). Prueba suavizarlo para ver cómo se deforman.':'Malla cargada. Todas las caras son quads.',p==='cyl'?'warn':'');updateUI()}
+document.querySelectorAll('#pgModes .btn').forEach(b=>b.addEventListener('click',()=>setPlayMode(b.dataset.mode)));
+$('pgPreset').addEventListener('change',loadPreset);
+function doExtrude(){const ids=[...play.sel.face];if(!ids.length)return;const d=+$('pgThk').value;push();const base=play.mesh;const r=extrudeFaces(base,ids,d);
+  play.mesh=r.mesh;play.clearSel();r.faces.forEach(f=>play.sel.face.add(f));play.rebuild();lastExtrude={base,ids};
+  msg(`Extrude: ${ids.length} cara(s) movidas y ${r.sides} quads laterales nuevos. Mueve el deslizador Thickness para ajustar, como en el manipulador de Maya.`,'ok');updateUI()}
+$('tExtrude').addEventListener('click',doExtrude);
+$('pgThk').addEventListener('input',()=>{const d=+$('pgThk').value;$('thkVal').textContent=d.toFixed(2);
+  if(lastExtrude&&!play.dead){const r=extrudeFaces(lastExtrude.base,lastExtrude.ids,d);play.mesh=r.mesh;play.rebuild()}});
+$('tLoop').addEventListener('click',()=>setTool(tool==='loop'?null:'loop'));
+$('tDelEdge').addEventListener('click',()=>{const r=deleteEdges(play.mesh,[...play.sel.edge]);push();play.setMesh(r.mesh);lastExtrude=null;
+  const s=stats(r.mesh);msg(r.merged?`Se borraron ${r.merged} arista(s) y se unieron sus caras.${s.n?' Ahora hay '+s.n+' N-gon(s): obsérvalos en rojo.':''}`:'No se pudo borrar: elige aristas interiores compartidas por dos caras.',s.n?'warn':'');updateUI()});
+$('tPoke').addEventListener('click',()=>{push();play.setMesh(pokeFaces(play.mesh,[...play.sel.face]));lastExtrude=null;msg('Poke Face: cada cara se dividió en triángulos alrededor de un vértice central (en amarillo).','warn');updateUI()});
+$('tTri').addEventListener('click',()=>{push();play.setMesh(triangulateFaces(play.mesh,[...play.sel.face]));lastExtrude=null;msg('Triangulate: las caras ahora son triángulos. Útil al exportar a un motor de juego, no para seguir modelando.','warn');updateUI()});
+$('tMerge').addEventListener('click',()=>{push();play.setMesh(mergeVerts(play.mesh,[...play.sel.vertex]));lastExtrude=null;const s=stats(play.mesh);msg(`Merge to Center: vértices fusionados en uno.${s.t?' Fusionar vértices de un mismo quad crea triángulos.':''}`,s.t||s.n?'warn':'ok');updateUI()});
+$('tSmooth').addEventListener('click',()=>toggleSmooth());
+function toggleSmooth(v){const on=v===undefined?play.smooth===0:v;play.smooth=on?2:0;$('tSmooth').setAttribute('aria-pressed',on);play.rebuild();msg(on?'Vista suavizada (tecla 3). Las aristas grises son la caja de control; sigues editando sobre ella.':'Vista de la malla original (tecla 1).')}
+$('tTopo').addEventListener('click',()=>{play.topo=!play.topo;$('tTopo').setAttribute('aria-pressed',play.topo);play.rebuild()});
+function doUndo(){if(!undo.length)return;play.setMesh(undo.pop());lastExtrude=null;msg('Deshecho.');updateUI()}
+$('tUndo').addEventListener('click',doUndo);$('tReset').addEventListener('click',loadPreset);
+document.addEventListener('keydown',e=>{if(play.dead||/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName))return;
+  const r=$('vpPlay').getBoundingClientRect();if(r.bottom<0||r.top>innerHeight)return;
+  const map={F8:'object',F9:'vertex',F10:'edge',F11:'face'};
+  if(map[e.key]&&e.key!=='F11'){e.preventDefault();setPlayMode(map[e.key])}
+  else if(e.key==='3'){toggleSmooth(true)}else if(e.key==='1'){toggleSmooth(false)}
+  else if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();doUndo()}
+  else if((e.key==='Delete'||e.key==='Backspace')&&play.mode==='edge'&&play.sel.edge.size){e.preventDefault();$('tDelEdge').click()}});
+if(!play.dead){loadPreset();msg('Selecciona la cara central superior (clic) y pulsa Extrude.')}
+
+/* ================= Módulo 4: comparación ================= */
+function topFaces(m){return m.f.map((f,i)=>f.every(v=>Math.abs(m.v[v][1]-1)<1e-4)?i:-1).filter(i=>i>=0)}
+const meshQ=PRESETS.cube3();
+const meshT=(()=>{const M=cloneMesh(meshQ);const tf=new Set(topFaces(M));const nf=[];M.f.forEach((f,i)=>{if(!tf.has(i)){nf.push(f);return}
+  // diagonales alternadas, como suele dejarlas un Triangulate o un modelo importado
+  const flip=(i%2)===0;nf.push(...(flip?[[f[0],f[1],f[2]],[f[0],f[2],f[3]]]:[[f[1],f[2],f[3]],[f[1],f[3],f[0]]]))});M.f=nf;return M})();
+// N-gon: las 9 caras superiores se reemplazan por una sola cara con su contorno de 12 vértices
+const meshN=(()=>{const tf=new Set(topFaces(meshQ)),E=buildEdges(meshQ),next=new Map();
+  for(const fi of tf){const f=meshQ.f[fi];for(let j=0;j<f.length;j++){const a=f[j],b=f[(j+1)%f.length];if(!E.get(ekey(a,b)).faces.every(x=>tf.has(x)))next.set(a,b)}}
+  const start=next.keys().next().value,ring=[start];for(let v=next.get(start);v!==start;v=next.get(v))ring.push(v);
+  return compact({v:meshQ.v,f:meshQ.f.filter((_,i)=>!tf.has(i)).concat([ring])})})();
+const cmpViews=[['vpQ',meshQ],['vpT',meshT],['vpN',meshN]].map(([id,m])=>{const v=new Viewer($(id),{interactive:false,topo:true});if(!v.dead){v.smooth=2;v.setMesh(m,true)}return v});
+const syncCams=()=>{};cmpViews.forEach((v,i)=>{if(v.dead)return;v.controls.addEventListener('change',()=>{cmpViews.forEach((o,j)=>{if(j===i||o.dead)return;o.camera.position.copy(v.camera.position);o.controls.target.copy(v.controls.target);o.camera.lookAt(o.controls.target);o.render()})})});
+$('cmpLvl').addEventListener('input',e=>{$('cmpLvlV').textContent=e.target.value;cmpViews.forEach(v=>{if(v.dead)return;v.smooth=+e.target.value;v.rebuild()})});
+$('cmpWire').addEventListener('click',e=>{const on=e.currentTarget.getAttribute('aria-pressed')!=='true';e.currentTarget.setAttribute('aria-pressed',on);cmpViews.forEach(v=>{if(v.dead)return;v.showCage=on;v.refresh()})});
+
+/* ================= Diagramas SVG ================= */
+const gr=(x,y,w,h,nx,ny,cls='d-ln')=>{let d='';for(let i=0;i<=nx;i++){const X=+(x+w*i/nx).toFixed(2);d+=`M${X} ${y}V${y+h}`}for(let j=0;j<=ny;j++){const Y=+(y+h*j/ny).toFixed(2);d+=`M${x} ${Y}H${x+w}`}return`<path class="${cls}" d="${d}"/>`};
+const rc=(x,y,w,h,cls)=>`<rect class="${cls}" x="${x}" y="${y}" width="${w}" height="${h}"/>`;
+const pa=(d,cls='d-hl')=>`<path class="${cls}" d="${d}"/>`;
+const dt=(x,y,cls='d-pt',r=2.6)=>`<circle class="${cls}" cx="${x}" cy="${y}" r="${r}"/>`;
+const tx=(x,y,s,a='middle')=>`<text class="d-txt" x="${x}" y="${y}" text-anchor="${a}">${s}</text>`;
+const face=`<rect class="d-face" x="20" y="10" width="80" height="70"/>`;
+const G33=face+gr(20,10,80,70,3,3);
+const FIG={
+ extrude:[G33+rc(46.67,33.33,26.67,23.33,'d-hf')+gr(20,10,80,70,3,3),
+   G33+rc(52.67,38.33,14.67,13.33,'d-hf')+pa('M46.67 33.33L52.67 38.33M73.33 33.33L67.33 38.33M73.33 56.67L67.33 51.67M46.67 56.67L52.67 51.67M52.67 38.33H67.33V51.67H52.67Z')],
+ bevel:[pa('M20 78V20H100','d-ln')+dt(20,20,'d-hp',4)+tx(60,60,'arista dura'),
+   pa('M20 78V40','d-ln')+pa('M20 40L25 28L32 22L40 20')+pa('M40 20H100','d-ln')+[[20,40],[25,28],[32,22],[40,20]].map(p=>dt(p[0],p[1],'d-hp',3)).join('')+tx(66,60,'3 segmentos')],
+ loop:[G33,G33+pa('M60 10V80')+[10,33.33,56.67,80].map(y=>dt(60,y,'d-hp',3)).join('')],
+ offset:[G33+pa('M46.67 10V80'),G33+pa('M39 10V80M54.3 10V80')],
+ slide:[G33+pa('M46.67 10V80'),G33+pa('M56 10V80')+pa('M40 45H52','d-dash')+pa('M49 42L53 45L49 48','d-dash')],
+ bridge:[face.replace('height="70"','height="20"')+gr(20,10,80,20,3,1)+rc(20,60,80,20,'d-face')+gr(20,60,80,20,3,1)+pa('M20 30H100M20 60H100'),
+   rc(20,10,80,70,'d-face')+gr(20,10,80,20,3,1)+gr(20,60,80,20,3,1)+rc(20,30,80,30,'d-hf')+gr(20,30,80,30,3,1,'d-ln')],
+ multicut:[face+gr(20,10,80,70,2,2),face+gr(20,10,80,70,2,2)+pa('M20 26L60 34L100 58')+[[20,26],[60,34],[100,58]].map(p=>dt(p[0],p[1],'d-hp',3)).join('')],
+ connect:[face+gr(20,10,80,70,2,1)+pa('M20 10H60M20 80H60'),face+gr(20,10,80,70,2,1)+pa('M40 10V80')+dt(40,10,'d-hp',3)+dt(40,80,'d-hp',3)],
+ targetweld:[pa('M20 20H58L60 45L20 70Z','d-ln')+pa('M100 20H64L66 52L100 70Z','d-ln')+dt(60,45,'d-hp',3.5)+dt(66,52,'d-hp',3.5)+pa('M60 45L66 52','d-dash'),
+   pa('M20 20H60L62 48L20 70Z','d-ln')+pa('M100 20H60L62 48L100 70Z','d-ln')+dt(62,48,'d-hp',4.5)],
+ fillhole:[rc(20,10,80,70,'d-face')+gr(20,10,80,70,4,4)+rc(40,27.5,40,35,'d-bg')+pa('M40 27.5H80V62.5H40Z'),
+   rc(20,10,80,70,'d-face')+gr(20,10,80,70,4,4)+`<rect class="d-bad" x="40" y="27.5" width="40" height="35"/>`+[[40,27.5],[60,27.5],[80,27.5],[80,45],[80,62.5],[60,62.5],[40,62.5],[40,45]].map(p=>dt(p[0],p[1],'d-pt',2.6)).join('')+tx(60,48,'8 LADOS')],
+ poke:[rc(30,15,60,60,'d-hf')+pa('M30 15H90V75H30Z','d-ln'),rc(30,15,60,60,'d-hf')+pa('M30 15H90V75H30ZM30 15L90 75M90 15L30 75','d-ln')+dt(60,45,'d-hp',3.5)],
+ delete:[face+gr(20,10,80,70,2,1)+pa('M60 10V80'),face+pa('M20 10H100V80H20Z','d-ln')+tx(60,48,'1 CARA')],
+ adddiv:[rc(25,15,70,60,'d-hf')+pa('M25 15H95V75H25Z','d-ln'),rc(25,15,70,60,'d-hf')+gr(25,15,70,60,2,2)],
+ circ:[pa('M35 20H85V70H35Z','d-hl')+[[35,20],[60,20],[85,20],[85,45],[85,70],[60,70],[35,70],[35,45]].map(p=>dt(p[0],p[1],'d-pt')).join(''),
+   `<circle class="d-hl" cx="60" cy="45" r="27"/>`+Array.from({length:8},(_,i)=>{const a=i*Math.PI/4;return dt(60+27*Math.cos(a),45+27*Math.sin(a),'d-pt')}).join('')],
+ chamfer:[face+gr(20,10,80,70,2,2)+dt(60,45,'d-hp',4),face+gr(20,10,80,70,2,2)+`<polygon class="d-face" points="60,35 70,45 60,55 50,45"/>`+pa('M60 35L70 45L60 55L50 45Z')],
+ collapse:[face+gr(20,10,80,70,2,2)+pa('M45 45H75'),pa('M20 10H100V80H20Z','d-ln')+pa('M60 10V80M20 45H100M20 10L60 45L100 10M20 80L60 45L100 80','d-ln')+dt(60,45,'d-hp',4)],
+ smooth:[rc(30,15,60,60,'d-face')+pa('M30 15H90V75H30Z','d-ln'),`<rect class="d-face" x="30" y="15" width="60" height="60" rx="22"/>`+`<rect class="d-ln" x="30" y="15" width="60" height="60" rx="22"/>`+pa('M45 17V73M60 15V75M75 17V73M32 30H88M30 45H90M32 60H88','d-ln')],
+ mirror:[pa('M60 12V78','d-dash')+`<path class="d-face" d="M60 20H35L25 40L35 70H60Z"/>`+pa('M60 20H35L25 40L35 70H60','d-ln'),
+   pa('M60 12V78','d-dash')+`<path class="d-face" d="M60 20H35L25 40L35 70H85L95 40L85 20Z"/>`+pa('M35 20L25 40L35 70H85L95 40L85 20Z','d-ln')+pa('M60 20H85L95 40L85 70H60')],
+ combine:[rc(20,25,35,40,'d-face')+pa('M20 25H55V65H20Z','d-ln')+rc(65,25,35,40,'d-hf')+pa('M65 25H100V65H65Z','d-ln'),
+   rc(20,25,35,40,'d-hf')+rc(65,25,35,40,'d-hf')+pa('M20 25H55V65H20ZM65 25H100V65H65Z')+tx(60,80,'1 OBJETO')],
+ bool:[`<circle class="d-face" cx="48" cy="45" r="24"/><circle class="d-hf" cx="74" cy="45" r="20"/><circle class="d-ln" cx="48" cy="45" r="24"/><circle class="d-ln" cx="74" cy="45" r="20"/>`,
+   `<circle class="d-face" cx="48" cy="45" r="24"/><circle class="d-ln" cx="48" cy="45" r="24"/><circle class="d-bg" cx="74" cy="45" r="20"/><path class="d-hl" d="M64.9 27.4A20 20 0 0 0 64.9 62.6"/>`+tx(60,86,'DIFFERENCE')],
+ quaddraw:[`<ellipse class="d-face" cx="60" cy="45" rx="42" ry="32"/>`+Array.from({length:12},(_,i)=>dt(32+(i%4)*18.7,28+Math.floor(i/4)*17,'d-hp',2.6)).join(''),
+   `<ellipse class="d-face" cx="60" cy="45" rx="42" ry="32"/>`+`<path class="d-ln" style="stroke:var(--good);stroke-width:2" d="${(()=>{let d='';for(let r=0;r<3;r++)d+=`M32 ${28+r*17}H88.1`;for(let c=0;c<4;c++)d+=`M${(32+c*18.7).toFixed(1)} 28V62`;return d})()}"/>`],
+ loopsel:[face+gr(20,10,80,70,4,3),face+gr(20,10,80,70,4,3)+pa('M20 33.33H100')],
+ ringsel:[face+gr(20,10,80,70,4,3),face+gr(20,10,80,70,4,3)+pa('M20 33.33V56.67M40 33.33V56.67M60 33.33V56.67M80 33.33V56.67M100 33.33V56.67')],
+ soft:[face+gr(20,10,80,70,4,4)+dt(60,45,'d-hp',4),`<defs><radialGradient id="sg"><stop offset="0" stop-color="#ffd21f" stop-opacity=".95"/><stop offset=".55" stop-color="#ff7a1f" stop-opacity=".55"/><stop offset="1" stop-color="#c23bd6" stop-opacity="0"/></radialGradient></defs>`+face+`<circle cx="60" cy="45" r="34" fill="url(#sg)"/>`+gr(20,10,80,70,4,4)],
+ wedge:[rc(30,40,60,20,'d-face')+pa('M30 40H90V60H30Z','d-ln')+pa('M90 40V60'),
+   rc(30,40,60,20,'d-face')+pa('M30 40H90V60H30Z','d-ln')+`<path class="d-hf" d="M90 60L90 40L104 46L110 60Z"/>`+pa('M90 40L104 46L110 60M90 60L104 46','d-ln')+pa('M90 40V60')],
+ extract:[face+gr(20,10,80,70,3,3)+rc(46.67,33.33,26.67,23.33,'d-hf'),face+gr(20,10,80,70,3,3)+rc(46.67,33.33,26.67,23.33,'d-bg')+`<rect class="d-hf" x="78" y="2" width="26.67" height="23.33"/>`+pa('M78 2h26.67v23.33H78Z')+pa('M62 40L80 22','d-dash')],
+ append:[pa('M20 20H60L60 70H20Z','d-ln')+rc(20,20,40,50,'d-face')+pa('M60 20L100 30V65L60 70','d-dash'),rc(20,20,40,50,'d-face')+pa('M20 20H60L60 70H20Z','d-ln')+`<path class="d-hf" d="M60 20L100 30V65L60 70Z"/>`+pa('M60 20L100 30V65L60 70')]
+};
+const svgFig=(inner)=>`<svg viewBox="0 0 120 90" role="img">${inner}</svg>`;
+
+/* ================= Módulo 3: datos del toolkit ================= */
+const TOOLS=[
+ {cat:'Selección',items:[
+  {id:'loopsel',n:'Edge Loop',en:'Select Edge Loop',menu:'Select > Select Edge Loop',key:'Doble clic en una arista',d:'Selecciona una fila continua de aristas que da la vuelta al modelo pasando de quad en quad.',use:['Elegir rápidamente un anillo de aristas para escalar, mover o biselar.','Revisar el flujo de la malla: si el loop se corta antes de tiempo hay un polo, triángulo o N-gon.'],tip:'Shift + doble clic en otra arista del mismo loop selecciona solo el tramo entre ambas.'},
+  {id:'ringsel',n:'Edge Ring',en:'Select Edge Ring',menu:'Select > Select Edge Ring',key:'—',d:'Selecciona las aristas paralelas que cruzan una tira de quads. Es la dirección perpendicular al loop.',use:['Seleccionar una franja para aplicar Connect y crear un loop.','Preparar aristas para un Bevel en un cilindro.'],tip:'Selecciona un ring y aplica Connect: obtienes el mismo resultado que Insert Edge Loop.'},
+  {id:'soft',n:'Soft Selection',en:'Soft Selection',menu:'Modeling Toolkit > Soft Selection',key:'B (activar) · B + arrastrar (radio)',d:'Mover un componente arrastra también a sus vecinos con una caída gradual (de amarillo a negro en el viewport).',use:['Formas orgánicas: abultar una mejilla, curvar un ala.','Ajustes amplios sin mover vértices uno por uno.'],tip:'Usa Falloff mode «Surface» para que no afecte a partes cercanas que no están conectadas, como los labios superior e inferior.'},
+  {id:'mirror',n:'Simetría',en:'Symmetry',menu:'Status Line / Modeling Toolkit > Symmetry',key:'—',d:'Refleja la selección y las transformaciones al otro lado de un eje (Object X, World X o Topology).',use:['Modelar personajes y objetos simétricos trabajando una sola mitad.'],tip:'Topology Symmetry funciona aunque el modelo ya no esté centrado o esté en pose.'}]},
+ {cat:'Componentes',items:[
+  {id:'extrude',n:'Extrude',en:'Extrude',menu:'Edit Mesh > Extrude',key:'Ctrl + E',d:'Duplica las caras, aristas o vértices seleccionados y los conecta con el original mediante nuevas caras. Es la herramienta principal para «sacar» volumen.',use:['Brazos, patas, alas o cualquier saliente a partir de una caja.','Grosor de paredes y paneles.'],params:['Thickness: distancia a lo largo de la normal.','Offset: encoge o agranda la cara (efecto inset).','Divisions: loops intermedios en las paredes nuevas.','Keep Faces Together: extruye las caras vecinas como un bloque; desactivado, cada cara sale por separado.'],tip:'Si extruyes y cancelas sin mover, quedan caras duplicadas superpuestas. Deshaz con Ctrl + Z o usa Mesh > Cleanup para eliminarlas.'},
+  {id:'bevel',n:'Bevel',en:'Bevel',menu:'Edit Mesh > Bevel',key:'Ctrl + B',d:'Reemplaza una arista o vértice por una o varias caras, redondeando o achaflanando esquinas.',use:['Que las esquinas atrapen luz en el render: nada en la realidad tiene arista perfecta.','Crear loops de soporte cerca de una esquina para que se mantenga firme al suavizar.'],params:['Fraction: ancho del bisel.','Segments: número de caras del bisel (más segmentos = más redondo).','Depth: perfil convexo o cóncavo.','Chamfer: mantiene el bisel plano y recto.','Mitering: cómo se resuelven las esquinas donde se juntan varias aristas.'],tip:'Usa 2 o 3 segmentos con Fraction pequeño para piezas hard-surface que no vas a suavizar.'},
+  {id:'bridge',n:'Bridge',en:'Bridge',menu:'Edit Mesh > Bridge',key:'—',d:'Conecta dos bordes abiertos (o dos caras) con una tira de quads.',use:['Unir dos piezas, por ejemplo el torso con un brazo.','Cerrar el hueco entre dos bordes del mismo objeto.'],params:['Divisions: loops intermedios.','Twist / Taper: torsión y estrechamiento.','Bridge type: Linear, Smooth o Smooth path + curve.'],tip:'Los dos bordes deben tener el mismo número de aristas. Si son de objetos distintos, combínalos primero.'},
+  {id:'adddiv',n:'Add Divisions',en:'Add Divisions',menu:'Edit Mesh > Add Divisions',key:'—',d:'Subdivide caras o aristas seleccionadas en partes iguales.',use:['Añadir resolución localmente antes de esculpir o deformar.'],tip:'En caras, el modo Quads mantiene la topología limpia; Triangles crea diagonales.'},
+  {id:'targetweld',n:'Target Weld',en:'Target Weld',menu:'Mesh Tools > Target Weld',key:'Arrastrar de un vértice a otro',d:'Fusiona un vértice (o arista) con otro de destino. El primero se mueve hasta el segundo.',use:['Cerrar costuras entre piezas.','Eliminar polos y triángulos colapsando una arista.'],tip:'Para soldar muchos vértices cercanos a la vez usa Edit Mesh > Merge con un Threshold pequeño.'},
+  {id:'collapse',n:'Collapse',en:'Collapse',menu:'Edit Mesh > Collapse',key:'—',d:'Colapsa cada arista o cara seleccionada en un solo vértice central.',use:['Reducir densidad o cerrar un loop que termina.'],tip:'Colapsar aristas de un quad deja triángulos: revisa el resultado.'},
+  {id:'chamfer',n:'Chamfer Vertex',en:'Chamfer Vertex',menu:'Edit Mesh > Chamfer Vertex',key:'—',d:'Sustituye un vértice por una cara pequeña, cortando la esquina.',use:['Redirigir el flujo alrededor de un polo.'],tip:'Combínalo con Multi-Cut para volver a convertir el resultado en quads.'},
+  {id:'circ',n:'Circularize',en:'Circularize',menu:'Edit Mesh > Circularize',key:'—',d:'Reorganiza los componentes seleccionados en un círculo perfecto, sin crear N-gons.',use:['Abrir agujeros redondos en una superficie de quads (tornillos, ventanillas, ojos).'],tip:'Selecciona un bloque cuadrado de caras de 2×2 o 4×4, circularízalo y luego extruye o borra hacia adentro.'},
+  {id:'poke',n:'Poke Face',en:'Poke',menu:'Edit Mesh > Poke',key:'—',d:'Añade un vértice en el centro de cada cara y la divide en triángulos.',use:['Detalles puntuales y algunos casos de retopología.'],tip:'Crea triángulos: no la uses en zonas que se suavizan o deforman.'},
+  {id:'wedge',n:'Wedge',en:'Wedge',menu:'Edit Mesh > Wedge',key:'—',d:'Extruye una cara girándola alrededor de una arista, como un abanico.',use:['Codos de tubería, curvas de un mueble, arcos.'],tip:'Selecciona la cara y luego, con Ctrl, la arista que actúa de bisagra.'},
+  {id:'extract',n:'Extract / Duplicate',en:'Extract · Duplicate',menu:'Edit Mesh > Extract / Duplicate',key:'—',d:'Separa las caras en un objeto nuevo (Extract) o las copia dejando el original (Duplicate).',use:['Crear ropa a partir del cuerpo, paneles o piezas que salen de otra.'],tip:'Duplicate + Extrude es la forma rápida de crear una camiseta con grosor desde el torso.'}]},
+ {cat:'Herramientas',items:[
+  {id:'multicut',n:'Multi-Cut',en:'Multi-Cut',menu:'Mesh Tools > Multi-Cut',key:'Clic: cortar · Ctrl + clic: edge loop · Enter: terminar',d:'Herramienta de corte todo en uno: dibuja nuevas aristas cara por cara, inserta loops y corta con planos.',use:['Redirigir el flujo y convertir N-gons en quads conectando vértices.','Crear detalles hard-surface.'],tip:'Mantén Shift para hacer el corte en incrementos de porcentaje; Ctrl + Shift + clic inserta un loop centrado.'},
+  {id:'loop',n:'Insert Edge Loop',en:'Insert Edge Loop',menu:'Mesh Tools > Insert Edge Loop',key:'Clic sobre una arista',d:'Añade un loop completo que recorre todos los quads conectados, en paralelo a los existentes.',use:['Añadir resolución donde la malla se va a doblar (codos, rodillas).','Loops de soporte para que una esquina se mantenga firme al suavizar.'],params:['Relative / Equal distance / Multiple edge loops: dónde y cuántos loops.','Auto complete: recorre el loop completo automáticamente.'],tip:'Si el loop se detiene a mitad de camino, has encontrado un triángulo o N-gon. Pruébalo en el Taller (Módulo 2).'},
+  {id:'offset',n:'Offset Edge Loop',en:'Offset Edge Loop',menu:'Mesh Tools > Offset Edge Loop',key:'—',d:'Inserta dos loops paralelos a ambos lados del loop seleccionado.',use:['Endurecer un pliegue o un borde de forma simétrica.','Preparar una ranura que luego se extruye hacia adentro.'],tip:'Funciona igual que hacer un Bevel de un loop con un solo segmento, pero sin mover la arista original.'},
+  {id:'slide',n:'Slide Edge',en:'Slide Edge',menu:'Mesh Tools > Slide Edge',key:'Shift + arrastre medio',d:'Desliza aristas o loops sobre la superficie sin cambiar la forma del modelo.',use:['Reubicar loops sin deformar la silueta.'],tip:'Se combina muy bien con Quad Draw para relajar la topología.'},
+  {id:'connect',n:'Connect',en:'Connect Components',menu:'Edit Mesh > Connect',key:'—',d:'Une con una arista nueva los vértices o los puntos medios de las aristas seleccionadas.',use:['Partir un N-gon en quads conectando vértices opuestos.','Crear loops a partir de un edge ring.'],tip:'Selecciona dos vértices de la misma cara y aplica Connect: es la forma más limpia de dividir un N-gon.'},
+  {id:'quaddraw',n:'Quad Draw',en:'Quad Draw',menu:'Mesh Tools > Quad Draw',key:'Clic: punto · Shift + clic: crear quad · Ctrl + clic: loop · Shift + arrastrar: relajar',d:'Dibuja topología nueva sobre la superficie de otro modelo (live surface). Es la herramienta de retopología de Maya.',use:['Crear una malla limpia de quads sobre una escultura de ZBrush o un escaneo.'],tip:'Marca el modelo de alta resolución como Live (Make Live) antes de empezar.'},
+  {id:'append',n:'Append to Polygon',en:'Append to Polygon',menu:'Mesh Tools > Append to Polygon',key:'Clic en aristas de borde · Enter',d:'Crea una cara nueva a partir de aristas de borde existentes.',use:['Cerrar huecos de forma controlada, cara por cara.'],tip:'Úsala en vez de Fill Hole cuando quieres decidir cuántos lados tiene cada cara.'},
+  {id:'delete',n:'Delete Edge/Vertex',en:'Delete Edge/Vertex',menu:'Edit Mesh > Delete Edge/Vertex',key:'Ctrl + Supr',d:'Borra aristas y también los vértices que quedan sueltos. Supr a secas deja esos vértices dentro de la cara.',use:['Eliminar loops sobrantes y simplificar la malla.'],tip:'Borrar un loop completo mantiene quads. Borrar una sola arista suele crear un N-gon (lo puedes ver en el Taller).'}]},
+ {cat:'Malla (Mesh)',items:[
+  {id:'smooth',n:'Smooth',en:'Smooth',menu:'Mesh > Smooth · Vista previa: teclas 1, 2, 3',key:'1 · 2 · 3 (vista previa)',d:'Subdivide la malla con el algoritmo Catmull-Clark: cada quad se divide en 4 y la forma se redondea.',use:['Ver el resultado final de un modelo subdividido.','Aumentar la resolución antes de esculpir.'],tip:'Trabaja con la vista previa (3) y aplica Smooth real solo al final: cada nivel multiplica las caras por 4.'},
+  {id:'combine',n:'Combine / Separate',en:'Combine · Separate',menu:'Mesh > Combine / Separate',key:'—',d:'Combine une varios objetos en una sola malla; Separate divide en objetos las partes que no están conectadas.',use:['Combinar antes de Bridge o Merge entre piezas distintas.'],tip:'Tras combinar, borra el historial (Edit > Delete by Type > History) para limpiar los nodos.'},
+  {id:'mirror2',fig:'mirror',n:'Mirror',en:'Mirror',menu:'Mesh > Mirror',key:'—',d:'Crea la mitad opuesta del modelo y puede soldarla automáticamente en la línea central.',use:['Terminar un modelo simétrico trabajado por mitades.'],tip:'Revisa que los vértices del centro estén exactamente en X = 0 para que se suelden.'},
+  {id:'bool',n:'Booleans',en:'Booleans',menu:'Mesh > Booleans (Union, Difference, Intersection)',key:'—',d:'Suma, resta o intersecta volúmenes. Rápido para formas duras.',use:['Agujeros y encastres en hard-surface.'],tip:'El resultado casi siempre tiene N-gons y triángulos: limpia con Multi-Cut si lo vas a suavizar.'},
+  {id:'fillhole',n:'Fill Hole',en:'Fill Hole',menu:'Mesh > Fill Hole',key:'—',d:'Cierra un hueco con una sola cara que toca todo el borde.',use:['Cerrar rápidamente un objeto abierto.'],tip:'Si el borde tiene más de 4 aristas creas un N-gon. Después divídelo con Multi-Cut o usa Bridge / Append.'},
+  {id:'quadrangulate',fig:'adddiv',n:'Triangulate / Quadrangulate',en:'Triangulate · Quadrangulate',menu:'Mesh > Triangulate / Quadrangulate',key:'—',d:'Triangulate convierte todo en triángulos; Quadrangulate intenta unir pares de triángulos en quads.',use:['Triangular al exportar a un motor para controlar las diagonales.','Recuperar quads de un modelo importado.'],tip:'Quadrangulate no siempre acierta con el flujo; revisa el resultado.'},
+  {id:'retopo',fig:'quaddraw',n:'Remesh / Retopologize',en:'Remesh · Retopologize',menu:'Mesh > Remesh / Retopologize',key:'—',d:'Remesh rehace la malla en triángulos uniformes; Retopologize genera automáticamente una malla de quads.',use:['Obtener una base de quads rápida a partir de un escaneo o un Boolean.'],tip:'Para personajes que se animan, la retopología manual con Quad Draw sigue dando mejor control de los loops.'}]}
+];
+const tkList=$('tkList'),tkDetail=$('tkDetail');let currentTool='extrude';
+tkList.innerHTML=TOOLS.map(c=>`<div class="tk-cat"><h4>${c.cat}</h4><div>${c.items.map(t=>`<button data-t="${t.id}" aria-pressed="false">${t.n}</button>`).join('')}</div></div>`).join('');
+function showTool(id){currentTool=id;const t=TOOLS.flatMap(c=>c.items).find(x=>x.id===id);tkList.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.t===id));
+  const fig=FIG[t.fig||t.id];
+  tkDetail.innerHTML=`<header><h3>${t.n}</h3><span class="path">${t.menu}</span></header>
+   <p style="font-size:1.05rem">${t.d}</p>
+   ${fig?`<div class="fig"><figure>${svgFig(fig[0])}<figcaption>Antes</figcaption></figure><div class="arrow" aria-hidden="true">→</div><figure>${svgFig(fig[1])}<figcaption>Después</figcaption></figure></div>`:''}
+   <div class="kv"><div><h5>Atajo</h5><p>${t.key.split(' · ').map(k=>k==='—'?'Sin atajo por defecto (menú o Shift + clic derecho)':`<kbd>${k}</kbd>`).join(' ')}</p></div>
+   <div><h5>Cuándo usarla</h5><ul>${t.use.map(u=>`<li>${u}</li>`).join('')}</ul></div>
+   ${t.params?`<div><h5>Opciones clave</h5><ul>${t.params.map(u=>`<li>${u}</li>`).join('')}</ul></div>`:''}</div>
+   <div class="tip"><b>Consejo:</b> ${t.tip}</div>`}
+tkList.addEventListener('click',e=>{const b=e.target.closest('button');if(b)showTool(b.dataset.t)});showTool('extrude');
+
+/* ================= Diagramas de razones ================= */
+(function(){
+ // Loop que se detiene
+ let s=rc(10,10,220,110,'d-face')+gr(10,10,220,110,6,3);
+ s+=`<polygon class="d-bad" points="156.67,46.67 193.33,46.67 193.33,83.33 175,65 156.67,83.33"/>`;
+ s+=pa('M10 65H156.67')+dt(156.67,65,'d-hp',4)+`<text class="d-txt" x="175" y="104" text-anchor="middle">N-GON</text><text class="d-txt" x="80" y="58" text-anchor="middle">EDGE LOOP</text>`;
+ $('rLoop').innerHTML=s;
+ // Triangulación
+ let t=`<polygon class="d-face" points="20,30 100,20 105,105 25,100"/>`+pa('M20 30L100 20L105 105L25 100Z','d-ln')+pa('M20 30L105 105','d-hl');
+ t+=`<polygon class="d-face" points="135,30 215,20 220,105 140,100"/>`+pa('M135 30L215 20L220 105L140 100Z','d-ln')+pa('M215 20L140 100','d-hl');
+ t+=tx(62,122,'DIAGONAL A')+tx(177,122,'DIAGONAL B');$('rTri').innerHTML=t;
+ // Deformación codo
+ let d='';const loopsGood=[[20,40,20,90],[45,40,45,90],[70,42,68,92],[88,52,80,98],[100,66,86,104]];
+ d+=`<path class="d-face" d="M10 40H70Q100 45 112 75L95 108Q82 95 70 92H10Z"/>`+pa('M10 40H70Q100 45 112 75M10 92H70Q82 95 95 108','d-ln');
+ loopsGood.forEach(([a,b,c,e])=>d+=pa(`M${a} ${b}L${c} ${e}`,'d-ln'));
+ d+=`<path class="d-face" d="M130 40H190Q220 45 232 75L215 108Q202 95 190 92H130Z"/>`+pa('M130 40H190Q220 45 232 75M130 92H190Q202 95 215 108','d-ln')+pa('M140 40V92M165 40V92','d-ln');
+ d+=`<path class="d-bad" d="M165 40H190Q220 45 232 75L215 108Q202 95 190 92H165Z"/>`;
+ d+=tx(60,124,'LOOPS EN LA ARTICULACIÓN')+tx(185,124,'N-GON: SE PELLIZCA');$('rDef').innerHTML=d;
+ // Polos
+ const pole=(cx,cy,n,label)=>{let o='';for(let i=0;i<n;i++){const a=-Math.PI/2+i*2*Math.PI/n;o+=pa(`M${cx} ${cy}L${(cx+40*Math.cos(a)).toFixed(1)} ${(cy+40*Math.sin(a)).toFixed(1)}`,'d-ln')}return o+dt(cx,cy,'d-hp',5)+tx(cx,cy+56,label)};
+ $('rPole').innerHTML=pole(62,58,3,'POLO DE 3 (N-POLE)')+pole(178,58,5,'POLO DE 5 (E-POLE)');
+})();
+
+/* ================= Quiz ================= */
+const QUIZ=[
+ ['¿Qué componente guarda una posición X, Y, Z en el espacio?',['Arista','Vértice','Cara','Normal'],1,'El vértice es el punto; aristas y caras se definen a partir de vértices.'],
+ ['¿Con qué tecla cambias a modo Arista en Maya?',['F8','F9','F10','F11'],2,'F8 objeto, F9 vértice, F10 arista, F11 cara.'],
+ ['Insertas un edge loop y se detiene a la mitad del modelo. ¿Por qué?',['La malla no tiene UVs','Encontró un triángulo o N-gon','El objeto no está centrado','Falta aplicar Smooth'],1,'Los loops avanzan cruzando quads. Un triángulo o N-gon no tiene una arista «opuesta» por donde seguir.'],
+ ['Quieres redondear la arista dura de una mesa para que atrape luz. ¿Qué usas?',['Bevel','Poke Face','Fill Hole','Combine'],0,'Bevel (Ctrl + B) reemplaza la arista por caras nuevas; Segments controla lo redondo que queda.'],
+ ['¿Qué es un N-gon?',['Una cara de 3 lados','Una cara de 4 lados','Una cara de 5 o más lados','Un vértice con 5 aristas'],2,'N-gon es cualquier polígono de 5 lados o más. Un vértice con 5 aristas es un polo, que sí es válido en topología de quads.'],
+ ['¿Dónde es más aceptable dejar un triángulo?',['En el codo de un personaje','En una superficie plana que no se deforma','En la zona de los labios','En una superficie que se va a suavizar'],1,'En zonas planas y rígidas el triángulo no genera artefactos visibles. En deformación o suavizado sí.'],
+ ['Extruyes 4 caras vecinas con «Keep Faces Together» activado. ¿Qué pasa?',['Cada cara sale por separado','Las 4 salen como un único bloque','Se borran las caras','Se crea un N-gon'],1,'Con Keep Faces Together las caras vecinas comparten las paredes nuevas; desactivado, cada cara se extruye individualmente.']];
+let answered=0,correct=0;
+$('quizBox').innerHTML=QUIZ.map((q,i)=>`<div class="q" data-i="${i}"><p>${i+1}. ${q[0]}</p><div class="opts">${q[1].map((o,j)=>`<button data-j="${j}">${o}</button>`).join('')}</div><div class="fb" hidden></div></div>`).join('');
+$('quizBox').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const box=b.closest('.q');if(box.dataset.done)return;box.dataset.done=1;
+  const q=QUIZ[+box.dataset.i],j=+b.dataset.j;box.querySelectorAll('button').forEach((x,k)=>{if(k===q[2])x.classList.add('right');else if(k===j)x.classList.add('wrong');x.disabled=true});
+  const fb=box.querySelector('.fb');fb.hidden=false;fb.textContent=(j===q[2]?'Correcto. ':'No exactamente. ')+q[3];answered++;if(j===q[2])correct++;
+  $('quizScore').textContent=`Puntaje: ${correct} / ${QUIZ.length}`+(answered===QUIZ.length?(correct>=6?' · Excelente dominio de la topología.':' · Repasa el Módulo 4 y vuelve a intentarlo.'):'')});
+
+/* ================= Fondo del héroe: red de malla ================= */
+(function(){const c=$('heroBg'),x=c.getContext('2d');let W,H,pts=[];const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+ function init(){W=c.width=c.offsetWidth*devicePixelRatio;H=c.height=c.offsetHeight*devicePixelRatio;pts=[];const nx=14,ny=7;
+  for(let j=0;j<=ny;j++)for(let i=0;i<=nx;i++)pts.push({bx:W*(.35+.7*i/nx),by:H*(-.1+1.2*j/ny),i,j,ph:Math.random()*6.28});}
+ function draw(t){x.clearRect(0,0,W,H);const nx=14,ny=7,P=(i,j)=>pts[j*(nx+1)+i];
+  pts.forEach(p=>{const k=(p.i/nx);p.x=p.bx-k*k*W*.25+Math.sin(t/1600+p.ph)*6*devicePixelRatio;p.y=p.by+(p.i/nx)*(p.j-ny/2)*H*.05+Math.cos(t/1900+p.ph)*6*devicePixelRatio});
+  x.lineWidth=devicePixelRatio;x.strokeStyle='rgba(160,190,255,.35)';x.beginPath();
+  for(let j=0;j<=ny;j++)for(let i=0;i<=nx;i++){const p=P(i,j);if(i<nx){const q=P(i+1,j);x.moveTo(p.x,p.y);x.lineTo(q.x,q.y)}if(j<ny){const q=P(i,j+1);x.moveTo(p.x,p.y);x.lineTo(q.x,q.y)}}x.stroke();
+  x.fillStyle='rgba(247,201,72,.85)';pts.forEach(p=>{if((p.i+p.j)%5===0){x.beginPath();x.arc(p.x,p.y,2.2*devicePixelRatio,0,7);x.fill()}});
+  if(!reduce)requestAnimationFrame(draw)}
+ init();addEventListener('resize',init);requestAnimationFrame(draw)})();
+</script>
